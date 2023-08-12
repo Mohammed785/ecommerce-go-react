@@ -12,6 +12,7 @@ import (
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/Mohammed785/ecommerce/repository"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
@@ -45,10 +46,11 @@ type selectArg struct{
 	Password string
 	IsAdmin string `db:"is_admin"`
 }
+
 func (a *AuthControllerStruct) Login(ctx *gin.Context){
 	var data userCredentials;
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{
-		ctx.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
+		helpers.SendValidationError(ctx,err)
 		return
 	}
 	user,err:= repository.UserRepository.FindByEmail(data.Email,&selectArg{});
@@ -72,38 +74,38 @@ func (a *AuthControllerStruct) Login(ctx *gin.Context){
 func (a *AuthControllerStruct) Register(ctx *gin.Context){
 	var data userRegister;
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{
-		ctx.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
+		helpers.SendValidationError(ctx,err)
 		return
 	}
-	userId,err:=repository.UserRepository.Create(&models.User{FirstName: data.FirstName,LastName: data.LastName,Email: data.Email,Password: data.Password,Dob: data.Dob,Gender: data.Gender})
+	_,err:=repository.UserRepository.Create(&models.User{FirstName: data.FirstName,LastName: data.LastName,Email: data.Email,Password: data.Password,Dob: data.Dob,Gender: data.Gender})
 	if err!=nil{
 		var pgErr *pgconn.PgError
 		if errors.As(err,&pgErr){
-			fmt.Println(pgErr.Code,pgErr.ColumnName,pgErr.ConstraintName,pgErr.Where,pgErr.TableName)
 			if pgErr.Code=="23505"{
 				columnName:= strings.Split(pgErr.ConstraintName, "_")[2];
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":fmt.Sprintf("%s already exists",columnName)})
+				ctx.JSON(http.StatusBadRequest,gin.H{"message":fmt.Sprintf("%s already exists",columnName),"code":helpers.UNIQUE_CONSTRAINT})
 				return 
 			}
 		}
 		ctx.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
 		return	
 	}
-	ctx.JSON(http.StatusOK,gin.H{"id":userId})
+	ctx.Status(http.StatusOK)
 }
 
 func (a *AuthControllerStruct) Logout(ctx *gin.Context){
 	ctx.SetCookie("token","",1000,"","",false,true)
-	ctx.JSON(http.StatusOK,gin.H{"message":"Logged out"})
+	ctx.Status(http.StatusOK)
 }
 
 func (a *AuthControllerStruct) ChangePassword(ctx *gin.Context){
 	var data changePassword
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{
-		ctx.JSON(http.StatusBadRequest,gin.H{"err":err.Error()})
+		helpers.SendValidationError(ctx,err)
 		return
 	}
-	user,err:= repository.UserRepository.FindById("1",&selectArg{})
+	userId:=ctx.GetString("uid");
+	user,err:= repository.UserRepository.FindById(userId,&selectArg{})
 	if err!=nil && errors.Is(err,sql.ErrNoRows){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"Please login and try again"})
 		return
@@ -117,15 +119,15 @@ func (a *AuthControllerStruct) ChangePassword(ctx *gin.Context){
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
-	affected,_:=repository.UserRepository.Update("1",struct{
+	affected,_:=repository.UserRepository.Update(goqu.C("id").Eq(userId),struct{
 		Password string
 	}{
 		Password:string(newHash),
 	})
 	if affected==0{
-		ctx.JSON(http.StatusNotFound,gin.H{"message":"User not found"})
+		ctx.JSON(http.StatusNotFound,gin.H{"message":"User not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.JSON(http.StatusAccepted,gin.H{})
+	ctx.Status(http.StatusAccepted)
 }
 
