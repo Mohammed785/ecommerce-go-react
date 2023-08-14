@@ -3,6 +3,7 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import { ThemeProvider } from "./context/ThemeContext"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "./context/AuthContext"
 
 const router = createBrowserRouter([
   {
@@ -19,7 +20,9 @@ function App() {
   return (
     <>
     <ThemeProvider defaultTheme="system" >
-      <RouterProvider router={router}/>
+      <AuthProvider>
+        <RouterProvider router={router}/>
+      </AuthProvider>
       <Toaster/>
     </ThemeProvider>
     </>
