@@ -8,7 +8,7 @@ import (
 
 
 
-func SetupUserRoute(group *gin.RouterGroup){
+func SetupAuthRoute(group *gin.RouterGroup){
 	group.POST("/login",controllers.AuthController.Login)
 	group.POST("/register",controllers.AuthController.Register)
 	group.POST("/logout",controllers.AuthController.Logout)

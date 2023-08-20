@@ -27,7 +27,7 @@ func (a *authHelpers) GenerateToken(userId int,is_admin bool) (token string,err 
 		TOKEN_LIFE_SPAN = 12
 	}
 	claims := jwt.MapClaims{
-		"uid":strconv.Itoa(userId),
+		"uid":userId,
 		"is_admin":is_admin,
 		"exp":time.Now().Add(time.Hour*time.Duration(TOKEN_LIFE_SPAN)).Unix(),
 	}

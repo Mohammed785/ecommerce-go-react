@@ -10,7 +10,6 @@ type User struct{
 	Email string `db:"email"`
 	Password string `db:"password" json:"-"`
 	Dob string `db:"dob"`
-	Gender string `db:"gender"`
 	IsAdmin bool `db:"is_admin"`
 	CreatedAt *time.Time `db:"created_at"`
 	DeletedAt *time.Time `db:"deleted_at"`

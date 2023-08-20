@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -14,7 +13,6 @@ import (
 
 func AuthMiddleware(ctx *gin.Context){
 	tokenString := helpers.AuthHelpers.ExtractToken(ctx)
-	fmt.Println(tokenString)
 	if tokenString==""{
 		ctx.JSON(http.StatusUnauthorized,gin.H{"message":"Please login and try again"})
 		ctx.Abort()
