@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS tbl_user(
     email VARCHAR(120) NOT NULL UNIQUE,
     password VARCHAR(150) NOT NULL,
     dob DATE NOT NULL,
-    gender CHAR(1) NOT NULL CHECK(gender IN ('M','F')),
     is_admin BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP DEFAULT NULL
