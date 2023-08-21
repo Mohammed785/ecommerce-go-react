@@ -24,6 +24,16 @@ type attributesCreate struct{
 	Attributes []attributeCreate `json:"attributes" binding:"required,min=1,unique=Name,dive"`
 }
 
+type productAttribute struct{
+	ProductId int `json:"-" db:"product_id"`
+	AttributeId int `json:"attribute_id" db:"attribute_id" binding:"required"`
+	Value string `json:"value" db:"value" binding:"required,max=255"`
+}
+
+type productAttributes struct{
+	Attributes []productAttribute `json:"attributes" binding:"required,min=1,unique=AttributeId,dive"`
+}
+
 type attributeController struct{}
 var AttributeController *attributeController = &attributeController{}
 
