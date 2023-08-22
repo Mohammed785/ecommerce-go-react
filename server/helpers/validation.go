@@ -21,7 +21,11 @@ func ParseValidationError(errs ...error) map[string]string{
 		case *json.UnmarshalTypeError:
 			details[typedError.Field] = parseMarshalingError(*typedError)
 		default:
-			details["error"] = err.Error()
+			if err.Error()=="EOF"{
+				details["error"] = "please provide required data"
+			}else{
+				details["error"] = err.Error()
+			}
 		}
 	}
 	return details
@@ -43,6 +47,8 @@ func parseFieldError(err validator.FieldError) string{
 		return "invalid email address"
 	case "datetime":
 		return "invalid date time"
+	case "unique":
+		return fmt.Sprintf("%s should contain only unique values",err.Param())
 	default:
 		return err.Error()
 	}

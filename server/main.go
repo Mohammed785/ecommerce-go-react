@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Mohammed785/ecommerce/initializers"
+	"github.com/Mohammed785/ecommerce/middleware"
 	"github.com/Mohammed785/ecommerce/routes"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -33,8 +34,12 @@ func main(){
 		ctx.JSON(200,gin.H{})
 	})
 	authRouter := server.Group("/api/v1/auth");
-	userRouter := server.Group("/api/v1/user");
+	userRouter := server.Group("/api/v1/user",middleware.AuthMiddleware);
+	categoryRouter := server.Group("/api/v1/category");
+	productRouter := server.Group("/api/v1/product");
 	routes.SetupAuthRoute(authRouter)
 	routes.SetupUserRoute(userRouter)
+	routes.SetupCategoryRoute(categoryRouter)
+	routes.SetupProductRoute(productRouter)
 	server.Run();
 }
