@@ -11,6 +11,7 @@ import (
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/Mohammed785/ecommerce/repository"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgconn"
 )
@@ -21,7 +22,6 @@ type productController struct{}
 
 var ProductController *productController = &productController{}
 
-const DEFAULT_LIMIT = 25
 
 type product struct{
 	Product productCreate
@@ -45,6 +45,28 @@ type productUpdate struct{
 	Stock int `json:"stock" binding:"omitempty,min=0"`
 }
 
+func (p *productController) Find(ctx *gin.Context){
+	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("orderBy"))
+	exp := goqu.Ex{
+		"deleted_at":nil,
+	}
+	if ctx.Query("category")!=""{
+		exp["category_id"] = ctx.Query("category")
+	}
+	products,err:= repository.ProductRepository.Find(exp,&pagination,ctx.Query("category"),models.ProductFind{})
+	if err!=nil{
+		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		return
+	}
+	var cursor *int;
+	if len(products)<int(pagination.Limit){
+		cursor = nil;
+	}else{
+		last:=products[len(products)-1]
+		cursor=&last.Id
+	}
+	ctx.JSON(http.StatusOK,gin.H{"products":products,"cursor":cursor})
+}
 
 func (p *productController) FindOne(ctx *gin.Context){
 	productId:=ctx.Param("id")

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/Mohammed785/ecommerce/globals"
+	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
@@ -11,6 +12,22 @@ import (
 type productRepository struct {}
 
 var ProductRepository *productRepository = &productRepository{}
+
+func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.PaginationOptions,category string,cols... interface{}) (products []models.ProductFind,err error){
+	query:= globals.Dialect.From("tbl_product").Select(cols...).Limit(pagination.Limit)
+	if pagination.OrderBy=="desc"{
+		conditions["id"] = goqu.Op{"lt":pagination.Cursor}
+		query = query.Order(goqu.C("id").Desc())
+	}else{
+		conditions["id"] = goqu.Op{"gt":pagination.Cursor}
+		query = query.Order(goqu.C("id").Asc())
+	}
+
+	query = query.Where(conditions)
+	sql,_,_:=query.ToSQL()
+	err=globals.DB.Select(&products,sql)
+	return
+}
 
 func (p *productRepository) FindOne(identifier string)(product models.Product,err error) {
 	err= globals.DB.Get(&product,`SELECT product.*,cat.name AS category_name FROM tbl_product product

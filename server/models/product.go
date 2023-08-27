@@ -43,3 +43,9 @@ type ProductAttribute struct{
 	AttributeId int `json:"attribute_id" db:"attribute_id" binding:"required"`
 	Value string `json:"value" binding:"required,max=255"`
 }
+
+type ProductFind struct{
+	Id int `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+	Price float64 `db:"price" json:"price"`
+}
