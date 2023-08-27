@@ -11,8 +11,7 @@ import (
 
 func ParseValidationError(errs ...error) map[string]string{
 	details:=make(map[string]string)
-	for i,err:= range errs{
-		fmt.Println(i);
+	for _,err:= range errs{
 		switch typedError:=err.(type){
 		case validator.ValidationErrors:
 			for _,e:=range typedError{

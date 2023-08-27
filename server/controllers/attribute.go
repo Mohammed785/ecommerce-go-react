@@ -1,14 +1,12 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/Mohammed785/ecommerce/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type attributeCreate struct{
@@ -61,14 +59,9 @@ func (a *attributeController) Create(ctx *gin.Context){
 	}
 	_,err:=repository.AttributeRepository.CreateBulk(data.Attributes)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"attribute already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	ctx.Status(http.StatusAccepted)
@@ -83,14 +76,9 @@ func (a *attributeController) Update(ctx *gin.Context){
 	id:=ctx.Param("id")
 	rows,err:=repository.AttributeRepository.Update(id,data)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"attribute already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	if rows==0{
@@ -111,5 +99,6 @@ func (a *attributeController) Delete(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"attribute not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
+	ctx.Status(http.StatusOK)
 }
 

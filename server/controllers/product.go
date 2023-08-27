@@ -4,16 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/Mohammed785/ecommerce/repository"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 
@@ -34,6 +31,7 @@ type productCreate struct{
 	Description *string `json:"description" binding:"omitempty"`
 	Price float64 `json:"price" binding:"required,min=0"`
 	Stock int `json:"stock" binding:"required,min=0"`
+	CategoryId int `json:"category_id" binding:"required,min=1" db:"category_id"`
 }
 
 
@@ -53,7 +51,7 @@ func (p *productController) Find(ctx *gin.Context){
 	if ctx.Query("category")!=""{
 		exp["category_id"] = ctx.Query("category")
 	}
-	products,err:= repository.ProductRepository.Find(exp,&pagination,ctx.Query("category"),models.ProductFind{})
+	products,err:= repository.ProductRepository.Find(exp,&pagination,models.ProductFind{})
 	if err!=nil{
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
@@ -90,20 +88,9 @@ func (p *productController) Create(ctx *gin.Context){
 	}
 	err:=repository.ProductRepository.Create(&data.Product,data.Attributes)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"sku already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return
-			}
-			if pgErr.Code=="23503"{
-				re:=regexp.MustCompile(`=\((\d+)\)`)
-				attribute_id := re.FindStringSubmatch(pgErr.Detail)[1]
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"attribute not found","code":helpers.RECORD_NOT_FOUND,"details":gin.H{"attribute_id":attribute_id}})
-				return
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"product"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	ctx.Status(http.StatusAccepted)
@@ -112,16 +99,12 @@ func (p *productController) Create(ctx *gin.Context){
 func (p *productController) Update(ctx *gin.Context){
 	id:=ctx.Param("id")
 	var data productUpdate
-	if err:=ctx.ShouldBindJSON(data);err!=nil{
+	if err:=ctx.ShouldBindJSON(&data);err!=nil{
 		helpers.SendValidationError(ctx,err)
 		return
 	}
 	rows,err:=repository.ProductRepository.Update(id,data)
 	if err!=nil{
-		if errors.Is(err,sql.ErrNoRows){
-			ctx.JSON(http.StatusNotFound,gin.H{"message":"product not found","code":helpers.RECORD_NOT_FOUND})
-			return
-		}
 		ctx.JSON(http.StatusNotFound,gin.H{"message":err.Error()})
 		return
 	}
@@ -136,10 +119,6 @@ func (p *productController) Delete(ctx *gin.Context){
 	_,hard:=ctx.GetQuery("hard")
 	rows,err:=repository.ProductRepository.Delete(id,hard)
 	if err!=nil{
-		if errors.Is(err,sql.ErrNoRows){
-			ctx.JSON(http.StatusNotFound,gin.H{"message":"product not found","code":helpers.RECORD_NOT_FOUND})
-			return
-		}
 		ctx.JSON(http.StatusNotFound,gin.H{"message":err.Error()})
 		return
 	}
@@ -166,21 +145,9 @@ func (p *productController) AddProductAttributes(ctx *gin.Context){
 	}
 	err=repository.ProductRepository.AddAttributes(productId,attributes.Attributes)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				re:=regexp.MustCompile(`(?m)=\((\w+|(\w+, \w+))\)`)
-				attribute_id := strings.Split(re.FindStringSubmatch(pgErr.Detail)[1], ", ")[1]
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"product already have this attribute","code":helpers.UNIQUE_CONSTRAINT,"details":gin.H{"attributeId":attribute_id}})
-				return
-			}else if pgErr.Code=="23503"{
-				re:=regexp.MustCompile(`=\((\d+)\)`)
-				attribute_id := re.FindStringSubmatch(pgErr.Detail)[1]
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"attribute not found","code":helpers.RECORD_NOT_FOUND,"details":gin.H{"attributeId":attribute_id}})
-				return	
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"product attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	ctx.Status(http.StatusAccepted)

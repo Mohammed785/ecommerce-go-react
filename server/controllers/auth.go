@@ -11,7 +11,6 @@ import (
 	"github.com/Mohammed785/ecommerce/repository"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -81,14 +80,9 @@ func (a *AuthControllerStruct) Register(ctx *gin.Context){
 	data.Password = string(hash);
 	_,err=repository.UserRepository.Create(data);
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"Email already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return 
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"user"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusBadRequest,gin.H{"message":err.Error()})
 		return	
 	}
 	ctx.Status(http.StatusOK)

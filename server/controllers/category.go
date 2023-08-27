@@ -1,14 +1,11 @@
 package controllers
 
 import (
-	"database/sql"
-	"errors"
 	"net/http"
 
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type categoryController struct{}
@@ -35,14 +32,9 @@ func (c *categoryController) Create(ctx *gin.Context){
 	}
 	err:=repository.CategoryRepository.Create(data.Name)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"Category already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return 
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	ctx.Status(http.StatusAccepted)
@@ -56,14 +48,9 @@ func (c *categoryController) Update(ctx *gin.Context){
 	}
 	rows,err:=repository.CategoryRepository.Update(id,data.Name)
 	if err!=nil{
-		var pgErr *pgconn.PgError
-		if errors.As(err,&pgErr){
-			if pgErr.Code=="23505"{
-				ctx.JSON(http.StatusBadRequest,gin.H{"message":"category already exists","code":helpers.UNIQUE_CONSTRAINT})
-				return
-			}
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	if rows==0{
@@ -76,10 +63,10 @@ func (c *categoryController) Delete(ctx *gin.Context){
 	id:=ctx.Param("id")
 	rows,err:=repository.CategoryRepository.Delete(id)
 	if err!=nil{
-		if errors.Is(err,sql.ErrNoRows){
-			ctx.Status(http.StatusNotFound)
-			return
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
+		return
 	}
 	if rows==0{
 		ctx.Status(http.StatusNotFound)

@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"database/sql"
-	"errors"
 	"net/http"
 
 	"github.com/Mohammed785/ecommerce/helpers"
@@ -21,11 +19,9 @@ func (u *userController) Me(ctx *gin.Context){
 	userId := ctx.GetFloat64("uid")
 	user,err:=repository.UserRepository.FindById(int(userId),models.User{})
 	if err!=nil{
-		if errors.Is(err,sql.ErrNoRows){
-			ctx.JSON(http.StatusNotFound,gin.H{"message":"user don't exists","code":helpers.RECORD_NOT_FOUND})
-			return
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK,gin.H{"user":user})

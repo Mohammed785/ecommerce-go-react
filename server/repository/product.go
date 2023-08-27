@@ -13,7 +13,7 @@ type productRepository struct {}
 
 var ProductRepository *productRepository = &productRepository{}
 
-func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.PaginationOptions,category string,cols... interface{}) (products []models.ProductFind,err error){
+func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.PaginationOptions,cols... interface{}) (products []models.ProductFind,err error){
 	query:= globals.Dialect.From("tbl_product").Select(cols...).Limit(pagination.Limit)
 	if pagination.OrderBy=="desc"{
 		conditions["id"] = goqu.Op{"lt":pagination.Cursor}
