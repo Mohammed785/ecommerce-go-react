@@ -41,3 +41,11 @@ func Includes[K comparable](hey []K,needle K)bool{
 	}
 	return false
 }
+
+func Map[T any,O any](items []T,fn func(T) O) []O{
+	mapped:=make([]O,0,len(items))
+	for _,item:=range items{
+		mapped = append(mapped, fn(item))
+	}
+	return mapped
+}

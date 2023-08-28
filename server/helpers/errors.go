@@ -75,6 +75,10 @@ func handlePgErr(ctx *gin.Context,pgErr *pgconn.PgError) {
 		columnName := matches[1]
 		columnValue := matches[2]
 		ctx.JSON(http.StatusBadRequest,gin.H{"message":fmt.Sprintf("%s not found",columnName),"code":INVALID_FOREIGN_KEY,"details":gin.H{columnName:columnValue}})
+	case "23514":
+		ctx.JSON(http.StatusBadRequest,gin.H{"message":"please check that all field have correct data","code":VALIDATION})
+	case "23502":
+		ctx.JSON(http.StatusBadRequest,gin.H{"message":"please provide all the required data","code":VALIDATION})
 	default:
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":pgErr.Message,"code":DATABASE_ERROR,"details":gin.H{"pgCode":pgErr.Code}})
 	}
