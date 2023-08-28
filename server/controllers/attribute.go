@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
@@ -9,17 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type attributeCreate struct{
-	Name string `json:"name" binding:"required,max=255"`
-	AttributeType string `json:"attribute_type" db:"attribute_type" goqu:"defaultifempty" binding:"omitempty,oneof= text number datetime date time"`
-}
+
 type attributeUpdate struct{
 	Name string `json:"name" binding:"omitempty,max=255"`
 	AttributeType string `json:"attribute_type" db:"attribute_type" goqu:"defaultifempty" binding:"omitempty,oneof= text number datetime date time"`
 }
 
 type attributesCreate struct{
-	Attributes []attributeCreate `json:"attributes" binding:"required,min=1,unique=Name,dive"`
+	Attributes []repository.AttributeCreate `json:"attributes" binding:"required,min=1,unique=Name,dive"`
 }
 
 type productAttribute struct{
@@ -57,7 +55,31 @@ func (a *attributeController) Create(ctx *gin.Context){
 		helpers.SendValidationError(ctx,err)
 		return
 	}
-	_,err:=repository.AttributeRepository.CreateBulk(data.Attributes)
+
+	err:=repository.AttributeRepository.CreateBulk(data.Attributes...)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	ctx.Status(http.StatusAccepted)
+}
+
+func (a *attributeController) AddToCategory(ctx *gin.Context){
+	id,err:=strconv.Atoi(ctx.Param("id"))
+	if err!=nil{
+		ctx.JSON(http.StatusBadRequest,gin.H{"message":"invalid attribute id","code":helpers.WRONG_PRAM})
+		return 
+	}
+	var data struct{
+		Ids []int `json:"ids" binding:"required,dive,min=1"`
+	}
+	if err:=ctx.ShouldBindJSON(&data);err!=nil{
+		helpers.SendValidationError(ctx,err)
+		return
+	}
+	err=repository.AttributeRepository.AddToCategory(id,data.Ids)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
 			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
