@@ -24,6 +24,20 @@ func (c *categoryController) Find(ctx *gin.Context){
 	}
 	ctx.JSON(http.StatusOK,gin.H{"categories":categories})
 }
+
+
+func (c *categoryController) GetCategoryAttributes(ctx *gin.Context){
+	id:=ctx.Param("id")
+	attributes,err:=repository.CategoryRepository.GetCategoryAttributes(id)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK,gin.H{"attributes":attributes})
+}
+
 func (c *categoryController) Create(ctx *gin.Context){
 	var data categoryCreate;
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{

@@ -8,6 +8,7 @@ import (
 
 func SetupCategoryRoute(route *gin.RouterGroup) {
 	route.GET("/",controllers.CategoryController.Find)
+	route.GET("/:id/attributes",controllers.CategoryController.GetCategoryAttributes)
 	route.POST("/",controllers.CategoryController.Create)
 	route.PUT("/:id",controllers.CategoryController.Update)
 	route.DELETE("/:id",controllers.CategoryController.Delete)
