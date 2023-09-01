@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -19,6 +20,8 @@ func ParseValidationError(errs ...error) map[string]string{
 			}
 		case *json.UnmarshalTypeError:
 			details[typedError.Field] = parseMarshalingError(*typedError)
+		case *strconv.NumError:
+			details["error"] = "please provide valid numbers"
 		default:
 			if err.Error()=="EOF"{
 				details["error"] = "please provide required data"
@@ -48,6 +51,8 @@ func parseFieldError(err validator.FieldError) string{
 		return "invalid date time"
 	case "unique":
 		return fmt.Sprintf("%s should contain only unique values",err.Param())
+	case "eqcsfield":
+		return fmt.Sprintf("%s must equal %s",err.Field(),err.Param())
 	default:
 		return err.Error()
 	}

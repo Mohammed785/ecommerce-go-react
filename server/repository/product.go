@@ -40,29 +40,49 @@ WHERE (product.id=$1 OR product.sku=CAST($1 AS VARCHAR)) AND deleted_at IS NULL`
 	return product,err
 }
 
-func (p *productRepository) Create(product interface{},attributes []models.ProductAttribute) error{
+func (p *productRepository) Create(product interface{},attributes []models.ProductAttribute) (int,error){
 	sql,_,_ := globals.Dialect.Insert("tbl_product").Rows(product).Returning("id").ToSQL()
-	row:= struct{ Id int64 }{Id:-1}
+	var Id int;
 	tx,err:=globals.DB.Beginx();
 	if err!=nil{
-		return err
+		return 0,err
 	}
 	res := tx.QueryRowx(sql)
 
-	err=res.StructScan(&row)
+	err=res.Scan(&Id)
 	if err!=nil{
 		tx.Rollback()
-		return err
+		return 0,err
 	}
 	for _,attr:= range attributes{
-		_,err = tx.Exec("INSERT INTO tbl_product_attribute(product_id,attribute_id,value) VALUES($1,$2,$3)",row.Id,attr.AttributeId,attr.Value)
+		_,err = tx.Exec("INSERT INTO tbl_product_attribute(product_id,attribute_id,value) VALUES($1,$2,$3)",Id,attr.AttributeId,attr.Value)
 		if err!=nil{
 			tx.Rollback()
-			return err
+			return 0,err
 		}
 	}
 	err = tx.Commit()
+	return Id,err
+}
+
+func (p *productRepository) AddImages(id string,images ...goqu.Record)error{
+	sql,_,_:=globals.Dialect.Insert("tbl_product_image").Rows(images).ToSQL()
+	_,err:= globals.DB.Exec(sql)
 	return err
+}
+func (p *productRepository) UpdateImage(imgId ,productId string)error{
+	_,err:= globals.DB.Exec("UPDATE tbl_product_image SET primary_img=CASE WHEN id=$1 THEN true ELSE false END WHERE product_id=$2",imgId,productId)
+	return err
+}
+func (p *productRepository) DeleteImages(ids []int)([]string,error){
+	query,args,err := sqlx.In("DELETE FROM tbl_product_image WHERE id IN (?) RETURNING img_name",ids)
+	if err!=nil{
+		return nil,err
+	}
+	query = globals.DB.Rebind(query)
+	names:=make([]string,0,len(ids))
+	err = globals.DB.Select(&names,query,args...)
+	return names,err
 }
 
 func (p *productRepository) Update(id string,data interface{}) (int64,error){

@@ -40,8 +40,8 @@ type ProductAttributes struct{
 }
 
 type ProductAttribute struct{
-	AttributeId int `json:"attribute_id" db:"attribute_id" binding:"required"`
-	Value string `json:"value" binding:"required,max=255"`
+	AttributeId int `json:"attribute_id" form:"attribute_id" db:"attribute_id" binding:"required"`
+	Value string `json:"value" form:"value" binding:"required,max=255"`
 }
 
 type ProductFind struct{

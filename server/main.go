@@ -22,6 +22,7 @@ func init(){
 
 func main(){
 	server := gin.Default()
+	server.MaxMultipartMemory = 4<<20
 	server.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"http://localhost:5173"},
 		AllowMethods: []string{"POST","PUT","GET","DELETE"},
@@ -37,9 +38,11 @@ func main(){
 	userRouter := server.Group("/api/v1/user",middleware.AuthMiddleware);
 	categoryRouter := server.Group("/api/v1/category");
 	productRouter := server.Group("/api/v1/product");
+	reviewRouter := server.Group("/api/v1/review");
 	routes.SetupAuthRoute(authRouter)
 	routes.SetupUserRoute(userRouter)
 	routes.SetupCategoryRoute(categoryRouter)
 	routes.SetupProductRoute(productRouter)
+	routes.SetupReviewRoute(reviewRouter)
 	server.Run();
 }
