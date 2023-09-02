@@ -39,7 +39,7 @@ type productCreate struct{
 }
 
 type productImage struct{
-	Image []*multipart.FileHeader `form:"image" binding:"required"`
+	Image []*multipart.FileHeader `form:"image" binding:"required,max=4"`
 	Primary []bool `form:"primary" binding:"required,eqcsfield=Image"`
 }
 
@@ -138,15 +138,20 @@ func (p *productController) AddImages(ctx *gin.Context){
 	}
 	ctx.Status(200)
 }
+
 func (p *productController) UpdateImage(ctx *gin.Context){
 	productId := ctx.Param("productId")	
 	imageId := ctx.Param("imageId")	
-	err:= repository.ProductRepository.UpdateImage(imageId,productId)
+	rows,err:= repository.ProductRepository.UpdateImage(imageId,productId)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"product images"){
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		}
 		return
+	}
+	if rows==0{
+		ctx.AbortWithStatusJSON(http.StatusNotFound,gin.H{"message":"image not found","code":helpers.RECORD_NOT_FOUND})
+		return 
 	}
 	ctx.Status(http.StatusOK)
 }

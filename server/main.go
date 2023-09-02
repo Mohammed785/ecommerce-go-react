@@ -36,13 +36,11 @@ func main(){
 	})
 	authRouter := server.Group("/api/v1/auth");
 	userRouter := server.Group("/api/v1/user",middleware.AuthMiddleware);
-	categoryRouter := server.Group("/api/v1/category");
-	productRouter := server.Group("/api/v1/product");
-	reviewRouter := server.Group("/api/v1/review");
+	categoryRouter := server.Group("/api/v1/category",middleware.AuthMiddleware);
+	productRouter := server.Group("/api/v1/product",middleware.AuthMiddleware);
 	routes.SetupAuthRoute(authRouter)
 	routes.SetupUserRoute(userRouter)
 	routes.SetupCategoryRoute(categoryRouter)
 	routes.SetupProductRoute(productRouter)
-	routes.SetupReviewRoute(reviewRouter)
 	server.Run();
 }

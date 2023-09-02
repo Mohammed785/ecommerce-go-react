@@ -70,9 +70,13 @@ func (p *productRepository) AddImages(id string,images ...goqu.Record)error{
 	_,err:= globals.DB.Exec(sql)
 	return err
 }
-func (p *productRepository) UpdateImage(imgId ,productId string)error{
-	_,err:= globals.DB.Exec("UPDATE tbl_product_image SET primary_img=CASE WHEN id=$1 THEN true ELSE false END WHERE product_id=$2",imgId,productId)
-	return err
+func (p *productRepository) UpdateImage(imgId ,productId string)(int64,error){
+	result,err:= globals.DB.Exec("UPDATE tbl_product_image SET primary_img=CASE WHEN id=$1 THEN true ELSE false END WHERE product_id=$2",imgId,productId)
+	if err!=nil{
+		return 0,err
+	}
+	rows,err:=result.RowsAffected()
+	return rows,err
 }
 func (p *productRepository) DeleteImages(ids []int)([]string,error){
 	query,args,err := sqlx.In("DELETE FROM tbl_product_image WHERE id IN (?) RETURNING img_name",ids)
