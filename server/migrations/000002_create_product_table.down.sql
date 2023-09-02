@@ -4,3 +4,8 @@ DROP TABLE IF EXISTS tbl_attribute;
 DROP TABLE IF EXISTS tbl_category_attribute;
 DROP TABLE IF EXISTS tbl_product_attribute;
 DROP TABLE IF EXISTS tbl_category;
+
+DROP INDEX IF EXISTS tbl_product_sku_idx;
+DROP INDEX IF EXISTS tbl_product_category_id_idx;
+DROP INDEX IF EXISTS tbl_product_attribute_attribute_id;
+DROP INDEX IF EXISTS tbl_product_attribute_product_id;

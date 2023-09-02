@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS tbl_product(
     FOREIGN KEY(category_id) REFERENCES tbl_category(id) ON DELETE SET NULL
 );
 
-CREATE INDEX tbl_product_sku_idx IF NOT EXISTS ON tbl_product(sku)
+CREATE INDEX tbl_product_sku_idx IF NOT EXISTS ON tbl_product(sku);
+CREATE INDEX IF NOT EXISTS tbl_product_category_id_idx ON tbl_product(category_id);
 
 CREATE TABLE IF NOT EXISTS tbl_attribute(
     id SERIAL PRIMARY KEY,
@@ -40,3 +41,6 @@ CREATE TABLE IF NOT EXISTS tbl_product_attribute(
     FOREIGN KEY(product_id) REFERENCES tbl_product(id) ON DELETE CASCADE,
     FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS tbl_product_attribute_attribute_id ON tbl_product_attribute(attribute_id);
+CREATE INDEX IF NOT EXISTS tbl_product_attribute_product_id ON tbl_product_attribute(product_id);
