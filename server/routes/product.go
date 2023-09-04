@@ -8,6 +8,7 @@ import (
 
 func SetupProductRoute(router *gin.RouterGroup){
 	router.GET("/",controllers.ProductController.Find)
+	router.GET("/search",controllers.ProductController.Search)
 	router.GET("/:id",controllers.ProductController.FindOne)
 	router.POST("/",controllers.ProductController.Create)
 	router.PUT("/:id",controllers.ProductController.Update)

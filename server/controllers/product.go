@@ -50,13 +50,39 @@ type productUpdate struct{
 	Price int `json:"price" binding:"omitempty,min=0"`
 	Stock int `json:"stock" binding:"omitempty,min=0"`
 }
+func (p *productController) Search(ctx *gin.Context){
+	keyword,exists:=ctx.GetQuery("q")
+	if !exists{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest,gin.H{"message":"Please provide a keyword to search for","code":helpers.WRONG_QUERY_PRAM})
+		return 
+	}
+	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("orderBy"))
+	products,err:=repository.ProductRepository.Search(keyword,&pagination)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"product"){
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	var cursor *int;
+	if len(products)<int(pagination.Limit){
+		cursor = nil;
+	}else{
+		last:=products[len(products)-1]
+		cursor=&last.Id
+	}
+	ctx.JSON(http.StatusOK,gin.H{"products":products,"cursor":cursor})
+}
 
 func (p *productController) Find(ctx *gin.Context){
 	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("orderBy"))
 	exp := goqu.Ex{
 		"deleted_at":nil,
 	}
-	if ctx.Query("category")!=""{
+	if ctx.Query("keyword")!=""{
+		exp["name"] = ""
+	}
+	if ctx.Query("cat")!=""{
 		exp["category_id"] = ctx.Query("category")
 	}
 	products,err:= repository.ProductRepository.Find(exp,&pagination,models.ProductFind{})

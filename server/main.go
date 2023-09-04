@@ -31,9 +31,7 @@ func main(){
 		AllowCredentials: true,
 		MaxAge: 12*time.Hour,
 	}))
-	server.GET("/",func(ctx *gin.Context) {
-		ctx.JSON(200,gin.H{})
-	})
+	server.Static("/static","./uploads")
 	authRouter := server.Group("/api/v1/auth");
 	userRouter := server.Group("/api/v1/user",middleware.AuthMiddleware);
 	categoryRouter := server.Group("/api/v1/category",middleware.AuthMiddleware);

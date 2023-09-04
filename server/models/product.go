@@ -23,8 +23,8 @@ type Product struct{
 }
 
 type Category struct{
-	Id int `db:"id"`
-	Name string `db:"name"`
+	Id int `json:"id"`
+	Name string `json:"name"`
 }
 
 type Attribute struct{
@@ -44,8 +44,18 @@ type ProductAttribute struct{
 	Value string `json:"value" form:"value" binding:"required,max=255"`
 }
 
+type ProductSearch struct{
+	Id int `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+	Price float64 `db:"price" json:"price"`
+	Image *string `db:"image" json:"image"`
+	Rank float64 `json:"-"`
+	Category *Category `json:"category" db:"cat"`
+}
+
 type ProductFind struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 	Price float64 `db:"price" json:"price"`
+	Category *Category `json:"category" db:"cat"`
 }
