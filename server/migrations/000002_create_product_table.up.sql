@@ -3,6 +3,13 @@ CREATE TABLE IF NOT EXISTS tbl_category(
     name VARCHAR(255) UNIQUE NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS tbl_sub_category(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(60) NOT NULL UNIQUE,
+    parent_id INT NOT NULL,
+    FOREIGN KEY(parent_id) REFERENCES tbl_category(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS tbl_product(
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -13,11 +20,13 @@ CREATE TABLE IF NOT EXISTS tbl_product(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP DEFAULT NULL,
     category_id INT,
-    FOREIGN KEY(category_id) REFERENCES tbl_category(id) ON DELETE SET NULL
+    FOREIGN KEY(category_id) REFERENCES tbl_sub_category(id) ON DELETE SET NULL
 );
 
+ALTER TABLE tbl_product ADD COLUMN IF NOT EXISTS search tsvector GENERATED ALWAYS AS (to_tsvector('english',name)) STORED;
 CREATE INDEX tbl_product_sku_idx IF NOT EXISTS ON tbl_product(sku);
 CREATE INDEX IF NOT EXISTS tbl_product_category_id_idx ON tbl_product(category_id);
+CREATE INDEX IF NOT EXISTS tbl_product_search_idx ON tbl_product USING GIN(search);
 
 CREATE TABLE IF NOT EXISTS tbl_attribute(
     id SERIAL PRIMARY KEY,
@@ -30,7 +39,7 @@ CREATE TABLE IF NOT EXISTS tbl_category_attribute(
     category_id INT,
     PRIMARY KEY(attribute_id,category_id),
     FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE,
-    FOREIGN KEY(category_id) REFERENCES tbl_category(id) ON DELETE CASCADE
+    FOREIGN KEY(category_id) REFERENCES tbl_sub_category(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS tbl_product_attribute(

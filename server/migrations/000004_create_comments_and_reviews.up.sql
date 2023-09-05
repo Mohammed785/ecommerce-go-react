@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS tbl_review(
     product_id INT,
     user_id INT,
     PRIMARY KEY(user_id,product_id),
-    FOREIGN KEY(product_id) REFERENCES tbl_product(id),
-    FOREIGN KEY(user_id) REFERENCES tbl_user(id)
+    FOREIGN KEY(product_id) REFERENCES tbl_product(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES tbl_user(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS tbl_review_product_id_idx ON tbl_review(product_id);
