@@ -1,10 +1,10 @@
-DROP TABLE IF EXISTS tbl_product;
-DROP TABLE IF EXISTS tbl_product_m2m_tags;
-DROP TABLE IF EXISTS tbl_attribute;
-DROP TABLE IF EXISTS tbl_category_attribute;
-DROP TABLE IF EXISTS tbl_product_attribute;
-DROP TABLE IF EXISTS tbl_category;
-DROP TABLE IF EXISTS tbl_sub_category;
+DROP TABLE IF EXISTS tbl_product_m2m_tags CASCADE;
+DROP TABLE IF EXISTS tbl_category_attribute CASCADE;
+DROP TABLE IF EXISTS tbl_product_attribute CASCADE;
+DROP TABLE IF EXISTS tbl_attribute CASCADE;
+DROP TABLE IF EXISTS tbl_sub_category CASCADE;
+DROP TABLE IF EXISTS tbl_category CASCADE;
+DROP TABLE IF EXISTS tbl_product CASCADE;
 
 DROP INDEX IF EXISTS tbl_product_sku_idx;
 DROP INDEX IF EXISTS tbl_product_category_id_idx;

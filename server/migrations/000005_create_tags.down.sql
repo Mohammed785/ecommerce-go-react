@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS tbl_tag;
-DROP TABLE IF EXISTS tbl_product_tags;
+DROP TABLE IF EXISTS tbl_tag CASCADE;
+DROP TABLE IF EXISTS tbl_product_tags CASCADE;
