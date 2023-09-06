@@ -25,6 +25,9 @@ type Product struct{
 type Category struct{
 	Id int `json:"id"`
 	Name string `json:"name"`
+	ParentId *int `json:"parent_id" db:"parent_id"`
+	SubsArr *string `json:"-" db:"subs"`
+	Subs []struct{Id int;Name string} `json:"subs" db:"-"`
 }
 
 type Attribute struct{

@@ -16,7 +16,7 @@ var ProductRepository *productRepository = &productRepository{}
 func (p *productRepository) Search(keyword string,pagination *helpers.PaginationOptions)(products []models.ProductSearch,err error){
 	query := `SELECT p.id,p.name,p.price,im.img_name AS image,cat.id AS "cat.id",cat.name AS "cat.name",
 	ts_rank(search,websearch_to_tsquery('english',$1)) AS rank FROM tbl_product p 
-	LEFT JOIN tbl_category AS cat ON p.category_id=cat.id LEFT JOIN tbl_product_image im ON im.product_id=p.id 
+	LEFT JOIN tbl_sub_category AS cat ON p.category_id=cat.id LEFT JOIN tbl_product_image im ON im.product_id=p.id 
 	AND im.primary_img=true WHERE search @@ websearch_to_tsquery('english',$1) ORDER BY rank DESC LIMIT $2`
 	err=globals.DB.Select(&products,query,keyword,pagination.Limit)
 	return

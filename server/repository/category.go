@@ -10,10 +10,19 @@ type categoryRepository struct{}
 
 var CategoryRepository *categoryRepository = &categoryRepository{}
 
-func (c *categoryRepository) Find()(categories []models.Category,err error){
-	err = globals.DB.Select(&categories,"SELECT id,name FROM tbl_category")
+
+func (c *categoryRepository) List()(categories []models.Category,err error){
+	err = globals.DB.Select(&categories,"SELECT id,name,parent_id FROM tbl_category")
 	return categories,err
 }
+
+func (c *categoryRepository) ListWithSubs()(categories []models.Category,err error){
+	err = globals.DB.Select(&categories,`SELECT cat.id,cat.name,ARRAY_AGG((sub.id,sub.name))::text[] subs 
+	FROM tbl_category cat LEFT JOIN tbl_category sub ON sub.parent_id=cat.id 
+	WHERE cat.parent_id IS NULL GROUP BY cat.id,cat.name ORDER BY cat.id`)
+	return categories,err
+}
+
 
 func (c *categoryRepository) GetCategoryAttributes(categoryId string)(attributes []models.Attribute,err error){
 	err= globals.DB.Select(&attributes,`SELECT attr.id,attr.name,attr.attribute_type FROM tbl_category_attribute cat_attr 
@@ -21,12 +30,13 @@ func (c *categoryRepository) GetCategoryAttributes(categoryId string)(attributes
 	return
 }
 
-func (c *categoryRepository) Create(name string)error{
-	_,err:=globals.DB.Exec("INSERT INTO tbl_category(name) VALUES($1)",name)
+func (c *categoryRepository) Create(name string,parent_id *int)error{
+	_,err:=globals.DB.Exec("INSERT INTO tbl_category(name,parent_id) VALUES($1,$2)",name,parent_id)
 	return err
 }
-func (c *categoryRepository) Update(id string,NewName string)(int64,error){
-	result,err:=globals.DB.Exec("UPDATE tbl_category SET name = $2 WHERE id=$1",id,NewName)
+func (c *categoryRepository) Update(data interface{})(int64, error){
+	
+	result,err:=globals.DB.NamedExec("UPDATE tbl_category SET name = :name, parent_id = :parentid WHERE id=:id",data)
 	if err!=nil{
 		return 0,err
 	}
