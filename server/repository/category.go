@@ -2,7 +2,9 @@ package repository
 
 import (
 	"github.com/Mohammed785/ecommerce/globals"
+	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
+	"github.com/doug-martin/goqu/v9"
 )
 
 
@@ -34,9 +36,9 @@ func (c *categoryRepository) Create(name string,parent_id *int)error{
 	_,err:=globals.DB.Exec("INSERT INTO tbl_category(name,parent_id) VALUES($1,$2)",name,parent_id)
 	return err
 }
-func (c *categoryRepository) Update(data interface{})(int64, error){
-	
-	result,err:=globals.DB.NamedExec("UPDATE tbl_category SET name = :name, parent_id = :parentid WHERE id=:id",data)
+func (c *categoryRepository) Update(id string,data interface{})(int64, error){
+	sql,_,_ := globals.Dialect.Update("tbl_category").Set(helpers.FlattenStruct(data)).Where(goqu.C("id").Eq(id)).ToSQL()
+	result,err:=globals.DB.Exec(sql)
 	if err!=nil{
 		return 0,err
 	}

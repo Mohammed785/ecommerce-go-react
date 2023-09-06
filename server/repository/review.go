@@ -38,7 +38,7 @@ func (r *reviewRepository) Create(userId int,productId string,rate int,comment *
 }
 
 func (r *reviewRepository) Update(productId string,userId int,data interface{})(int64,error){
-	sql,_,_ := globals.Dialect.Update("tbl_review").Where(goqu.Ex{"user_id":userId,"product_id":productId}).Set(data).ToSQL()
+	sql,_,_ := globals.Dialect.Update("tbl_review").Where(goqu.Ex{"user_id":userId,"product_id":productId}).Set(helpers.FlattenStruct(data)).ToSQL()
 	res,err:=globals.DB.Exec(sql)
 	if err!=nil{
 		return 0,err

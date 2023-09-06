@@ -44,12 +44,13 @@ type productImage struct{
 }
 
 type productUpdate struct{
-	Name string `json:"name" binding:"omitempty,max=255"`
-	Sku string `json:"sku" binding:"omitempty,min=16,max=16"`
-	Description string `json:"description" binding:"omitempty"`
-	Price int `json:"price" binding:"omitempty,min=0"`
-	Stock int `json:"stock" binding:"omitempty,min=0"`
+	Name *string `json:"name" binding:"omitempty,max=255"`
+	Sku *string `json:"sku" binding:"omitempty,min=16,max=16"`
+	Description *string `json:"description" binding:"omitempty"`
+	Price *int `json:"price" binding:"omitempty,min=0"`
+	Stock *int `json:"stock" binding:"omitempty,min=0"`
 }
+
 func (p *productController) Search(ctx *gin.Context){
 	keyword,exists:=ctx.GetQuery("q")
 	if !exists{

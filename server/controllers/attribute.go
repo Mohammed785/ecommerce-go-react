@@ -12,7 +12,7 @@ import (
 
 
 type attributeUpdate struct{
-	Name string `json:"name" binding:"omitempty,max=255"`
+	Name *string `json:"name" binding:"omitempty,max=255"`
 	AttributeType string `json:"attribute_type" db:"attribute_type" goqu:"defaultifempty" binding:"omitempty,oneof= text number datetime date time"`
 }
 

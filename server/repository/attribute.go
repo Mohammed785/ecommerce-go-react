@@ -74,7 +74,7 @@ func (a *attributeRepository) AddToCategory(attributeId int,categories []int) er
 }
 
 func (a *attributeRepository) Update(id string,values interface{})(int64,error){
-	sql,_,_ := globals.Dialect.Update("tbl_attribute").Where(goqu.C("id").Eq(id)).Set(values).ToSQL()
+	sql,_,_ := globals.Dialect.Update("tbl_attribute").Where(goqu.C("id").Eq(id)).Set(helpers.FlattenStruct(values)).ToSQL()
 	result,err:= globals.DB.Exec(sql)
 	if err!=nil{
 		return 0,err

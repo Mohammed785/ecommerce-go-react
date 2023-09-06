@@ -16,7 +16,7 @@ type reviewCreate struct{
 
 type reviewUpdate struct{
 	Comment *string `json:"comment" binding:"omitempty"`
-	Rate int `json:"rate" binding:"omitempty,min=1,max=5"`
+	Rate *int `json:"rate" binding:"omitempty,min=1,max=5"`
 }
 
 

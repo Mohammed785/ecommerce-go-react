@@ -17,9 +17,12 @@ type categoryController struct{}
 var CategoryController *categoryController = &categoryController{}
 
 type categoryCreate struct{
-	Id string `json:"-"`
 	Name string `json:"name" binding:"required,max=255"`
-	ParentId *int `json:"parent_id" binding:"omitempty,min=1"`
+	ParentId *int `json:"parent_id" db:"parent_id" binding:"omitempty,min=1"`
+}
+type categoryUpdate struct{
+	Name *string `json:"name" binding:"omitempty,max=255"`
+	ParentId *int `json:"parent_id" db:"parent_id" binding:"omitempty,min=1"`
 }
 
 func (c *categoryController) Find(ctx *gin.Context){
@@ -78,13 +81,12 @@ func (c *categoryController) Create(ctx *gin.Context){
 }
 func (c *categoryController) Update(ctx *gin.Context){
 	id:=ctx.Param("id")
-	var data categoryCreate;
+	var data categoryUpdate;
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{
 		helpers.SendValidationError(ctx,err)
 		return
 	}
-	data.Id = id
-	rows,err:=repository.CategoryRepository.Update(data)
+	rows,err:=repository.CategoryRepository.Update(id,data)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
 			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
