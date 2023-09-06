@@ -1,6 +1,10 @@
 package repository
 
 import (
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/Mohammed785/ecommerce/globals"
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
@@ -16,7 +20,7 @@ var ProductRepository *productRepository = &productRepository{}
 func (p *productRepository) Search(keyword string,pagination *helpers.PaginationOptions)(products []models.ProductSearch,err error){
 	query := `SELECT p.id,p.name,p.price,im.img_name AS image,cat.id AS "cat.id",cat.name AS "cat.name",
 	ts_rank(search,websearch_to_tsquery('english',$1)) AS rank FROM tbl_product p 
-	LEFT JOIN tbl_sub_category AS cat ON p.category_id=cat.id LEFT JOIN tbl_product_image im ON im.product_id=p.id 
+	LEFT JOIN tbl_category AS cat ON p.category_id=cat.id LEFT JOIN tbl_product_image im ON im.product_id=p.id 
 	AND im.primary_img=true WHERE search @@ websearch_to_tsquery('english',$1) ORDER BY rank DESC LIMIT $2`
 	err=globals.DB.Select(&products,query,keyword,pagination.Limit)
 	return
@@ -39,13 +43,42 @@ func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.Paginati
 }
 
 func (p *productRepository) FindOne(identifier string)(product models.Product,err error) {
-	err= globals.DB.Get(&product,`SELECT product.*,cat.name AS category_name FROM tbl_product product
-LEFT JOIN tbl_category cat ON cat.id=product.category_id
-WHERE (product.id=$1 OR product.sku=CAST($1 AS VARCHAR)) AND deleted_at IS NULL`,identifier)
+	err = globals.DB.Get(&product,`SELECT pr.id,pr.name,pr.price,pr.description,pr.stock,pr.sku
+	,pr.created_at,cat.id AS "cat.id",cat.name AS "cat.name",img.imgs,attrs.attrs
+	FROM tbl_product pr
+	LEFT JOIN tbl_category cat ON cat.id=pr.category_id
+	LEFT JOIN LATERAL(
+		SELECT product_id,ARRAY_AGG((id,img_name,primary_img)) AS imgs
+		FROM tbl_product_image img
+		WHERE img.product_id = pr.id
+		GROUP BY 1
+	)img ON true
+	LEFT JOIN LATERAL(
+		SELECT product_id,ARRAY_AGG((attr.id,pa.value,attr.attribute_type)) AS attrs 
+		FROM tbl_product_attribute pa JOIN tbl_attribute attr ON attr.id=pa.attribute_id 
+		WHERE product_id=pr.id
+		GROUP BY 1
+	)attrs ON true
+	WHERE (pr.id=$1 OR pr.sku=CAST($1 AS VARCHAR)) AND deleted_at IS NULL`,identifier)
 	if err!=nil{
 		return product,err
 	}
-	err = globals.DB.Select(&product.Attributes,"SELECT attr.id,pa.value,attr.attribute_type FROM tbl_product_attribute pa JOIN tbl_attribute attr ON attr.id=pa.attribute_id WHERE product_id=$1",product.Id)
+	pattren :=`\((.*?)\)`
+	re:=regexp.MustCompile(pattren)
+	imgs_matches := re.FindAllStringSubmatch(*product.Imgs,-1)
+	for _,match := range imgs_matches{
+		fields := strings.Split(match[1], ",")
+		id,_ := strconv.Atoi(fields[0])
+		item := models.ProductImage{Id:id,Name:fields[1],IsPrimary:fields[2]=="t" };
+		product.Images = append(product.Images,item)
+	}
+	attrs_matches := re.FindAllStringSubmatch(*product.Attrs,-1)
+	for _,match := range attrs_matches{
+		fields := strings.Split(match[1], ",")
+		id,_ := strconv.Atoi(fields[0])
+		item := models.ProductAttributes{Id:id,Value:strings.Trim(fields[1],`\"`) ,AttributeType:fields[2] };
+		product.Attributes = append(product.Attributes,item)
+	}
 	return product,err
 }
 
@@ -99,7 +132,7 @@ func (p *productRepository) DeleteImages(ids []int)([]string,error){
 }
 
 func (p *productRepository) Update(id string,data interface{}) (int64,error){
-	sql,_,_:=globals.Dialect.Update("tbl_product").Where(goqu.C("id").Eq(id)).Where(goqu.C("deleted_at").Eq(nil)).Set(data).ToSQL()
+	sql,_,_:=globals.Dialect.Update("tbl_product").Where(goqu.C("id").Eq(id)).Where(goqu.C("deleted_at").Eq(nil)).Set(helpers.FlattenStruct(data)).ToSQL()
 	result,err:=globals.DB.Exec(sql)
 	if err!=nil{
 		return 0,err

@@ -17,9 +17,11 @@ type Product struct{
 	Sku string `db:"sku" json:"sku"`
 	CreatedAt *time.Time `db:"created_at" json:"created_at"`
 	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
-	CategoryId *int `db:"category_id" json:"category_id"`
-	CategoryName *string `db:"category_name" json:"category_name"`
-	Attributes []ProductAttributes `json:"attributes"`
+	Category *Category `db:"cat"`
+	Attrs *string `json:"-" db:"attrs"`
+	Imgs *string `json:"-" db:"imgs"`
+	Images []ProductImage `json:"images" db:"-"`
+	Attributes []ProductAttributes `json:"attributes" db:"-"`
 }
 
 type Category struct{
@@ -47,6 +49,12 @@ type ProductAttribute struct{
 	Value string `json:"value" form:"value" binding:"required,max=255"`
 }
 
+type ProductImage struct{
+	Id int `json:"id"`
+	Name string `json:"name"`
+	IsPrimary bool `json:"is_primary"`
+}
+
 type ProductSearch struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
@@ -60,5 +68,5 @@ type ProductFind struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 	Price float64 `db:"price" json:"price"`
-	Category *Category `json:"category" db:"cat"`
+	// Category *Category `json:"category" db:"cat"`
 }
