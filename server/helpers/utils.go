@@ -12,12 +12,12 @@ const DEFAULT_LIMIT = 25
 
 
 type PaginationOptions struct{
-	Cursor uint
-	Limit uint
-	OrderBy string
+	Cursor uint  
+	Limit uint 
+	Order string 
 }
 
-func NewPaginationOptions(cursor, limit,orderBy string) PaginationOptions{
+func NewPaginationOptions(cursor, limit,order string) PaginationOptions{
 	pagination := PaginationOptions{}
 	cur,err := strconv.Atoi(cursor)
 	pagination.Cursor = uint(cur);
@@ -29,9 +29,9 @@ func NewPaginationOptions(cursor, limit,orderBy string) PaginationOptions{
 	if err!=nil{
 		pagination.Limit = DEFAULT_LIMIT
 	}
-	pagination.OrderBy = strings.ToLower(orderBy)
-	if orderBy=="" || !Includes[string]([]string{"DESC","desc","ASC","asc"},orderBy){
-		pagination.OrderBy = "desc"
+	pagination.Order = strings.ToLower(order)
+	if order=="" || !Includes[string]([]string{"DESC","desc","ASC","asc"},order){
+		pagination.Order = "desc"
 	}
 	return pagination
 }

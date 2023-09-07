@@ -27,15 +27,16 @@ func (p *productRepository) Search(keyword string,pagination *helpers.Pagination
 }
 
 func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.PaginationOptions,cols... interface{}) (products []models.ProductFind,err error){
-	query:= globals.Dialect.From("tbl_product").Select(cols...).Limit(pagination.Limit)
-	if pagination.OrderBy=="desc"{
-		conditions["id"] = goqu.Op{"lt":pagination.Cursor}
+	query:= globals.Dialect.Select("pr.id","pr.name","pr.price","pr.sku","img.img_name").From(goqu.T("tbl_product").As("pr")).
+	LeftJoin(goqu.T("tbl_product_image").As("img"),goqu.On(goqu.Ex{"img.product_id":goqu.I("pr.id"),"img.primary_img":true})).
+	Limit(pagination.Limit)
+	if pagination.Order=="desc"{
+		conditions["pr.id"] = goqu.Op{"lt":pagination.Cursor}
 		query = query.Order(goqu.C("id").Desc())
 	}else{
-		conditions["id"] = goqu.Op{"gt":pagination.Cursor}
+		conditions["pr.id"] = goqu.Op{"gt":pagination.Cursor}
 		query = query.Order(goqu.C("id").Asc())
 	}
-
 	query = query.Where(conditions)
 	sql,_,_:=query.ToSQL()
 	err=globals.DB.Select(&products,sql)

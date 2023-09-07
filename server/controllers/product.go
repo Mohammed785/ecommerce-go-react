@@ -51,13 +51,22 @@ type productUpdate struct{
 	Stock *int `json:"stock" binding:"omitempty,min=0"`
 }
 
+type FindQueryParams struct{
+	MinPrice *int `form:"min_price" binding:"omitempty,min=0"`
+	MaxPrice *int `form:"max_price" binding:"omitempty,min=0"`
+	Category *int `form:"category" binding:"omitempty,min=0"`
+	InStock *bool `form:"in_stock" binding:"omitempty"`
+}
+
+
+
 func (p *productController) Search(ctx *gin.Context){
 	keyword,exists:=ctx.GetQuery("q")
 	if !exists{
 		ctx.AbortWithStatusJSON(http.StatusBadRequest,gin.H{"message":"Please provide a keyword to search for","code":helpers.WRONG_QUERY_PRAM})
 		return 
 	}
-	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("orderBy"))
+	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("order"))
 	products,err:=repository.ProductRepository.Search(keyword,&pagination)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"product"){
@@ -76,15 +85,27 @@ func (p *productController) Search(ctx *gin.Context){
 }
 
 func (p *productController) Find(ctx *gin.Context){
-	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("orderBy"))
+	var params FindQueryParams;
+	if err:=ctx.ShouldBind(&params);err!=nil{
+		helpers.SendValidationError(ctx,err)
+		return
+	}
+	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("order"))
 	exp := goqu.Ex{
 		"deleted_at":nil,
 	}
-	if ctx.Query("keyword")!=""{
-		exp["name"] = ""
+	if params.MaxPrice!=nil&&params.MinPrice!=nil{
+		exp["price"] = goqu.Op{"between":goqu.Range(params.MinPrice,params.MaxPrice)}
+	}else if params.MaxPrice!=nil{
+		exp["price"] = goqu.Op{"lte":params.MaxPrice}
+	}else if params.MinPrice!=nil{
+		exp["price"] = goqu.Op{"gte":params.MinPrice}
 	}
-	if ctx.Query("cat")!=""{
-		exp["category_id"] = ctx.Query("category")
+	if params.Category!=nil{
+		exp["category_id"] = *&params.Category
+	}
+	if params.InStock!=nil{
+		exp["stock"] = goqu.Op{"gt":"0"}
 	}
 	products,err:= repository.ProductRepository.Find(exp,&pagination,models.ProductFind{})
 	if err!=nil{
