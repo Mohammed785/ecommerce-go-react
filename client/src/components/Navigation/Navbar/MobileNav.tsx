@@ -5,12 +5,12 @@ import { ShoppingCart } from "lucide-react"
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { mainNav, sideNav } from "./config";
-import useAuthContext from "@/hooks/useAuthContext";
+import { mainNav } from "./config";
+import useCategoryContext from "@/hooks/useCategoryContext";
 
 function MobileNav(){
     const [open,setOpen] = useState(false)
-    const {user} = useAuthContext()
+    const { categories } = useCategoryContext()
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -37,20 +37,17 @@ function MobileNav(){
                     </div>
                     <div className="flex flex-col space-y-2">
                         {
-                            sideNav.map((link,i)=>{
-                                if(link.admin&&!user?.isAdmin){
-                                    return ""
-                                }
-                                return <div key={i} className="flex flex-col space-y-3 pt-6">
-                                    <h4 className="font-medium">{link.title}</h4>
-                                    {link.sub.length&&link.sub.map((item)=>(
-                                        <Link to={item.to} className="text-muted-foreground">
-                                            {item.title}
+                            categories.map((cat)=>(
+                                <div key={cat.id} className="flex flex-col space-y-3 pt-6">
+                                    <h5 className="font-medium">{cat.name}</h5>
+                                    {cat.subs && cat.subs.map((sub) => (
+                                        <Link to={`/products?cid=${cat.id}&cname=${cat.name}&sid=${sub.id}&sname=${sub.name}`} className="text-muted-foreground">
+                                            {sub.name}
                                         </Link>
-                                    ))                                        
+                                    ))
                                     }
                                 </div>
-                            })
+                            ))
                         }
                     </div>
                 </ScrollArea>

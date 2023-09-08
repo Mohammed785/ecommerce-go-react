@@ -1,12 +1,16 @@
 import { cn } from "@/lib/utils"
-import { NavLink } from "react-router-dom"
+import { Link, NavLink } from "react-router-dom"
 import { mainNav } from "./config"
 import useAuthContext from "@/hooks/useAuthContext"
+import {NavigationMenu,NavigationMenuContent,NavigationMenuItem,NavigationMenuLink,NavigationMenuList,NavigationMenuTrigger,navigationMenuTriggerStyle} from "@/components/ui/navigation-menu"
+import useCategoryContext from "@/hooks/useCategoryContext"
+import { SubCategoryType } from "@/context/CategoryContext"
 
 
 function MainNav({className,...props}:React.HTMLAttributes<HTMLElement>){
     const baseClass = "text-sm font-medium transition-colors hover:text-primary"
     const { user } = useAuthContext()
+    const { categories } = useCategoryContext()
     return (
         <nav className={cn("flex items-center space-x-4 lg:space-x-6",className)} {...props}>
             {
@@ -21,8 +25,51 @@ function MainNav({className,...props}:React.HTMLAttributes<HTMLElement>){
                     </NavLink>
                 })
             }
+            <NavigationMenu>
+                <NavigationMenuList>
+                    <NavigationMenuItem>
+                        <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
+                        <NavigationMenuContent>
+                            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                                {
+                                    categories.map((cat) => (
+                                        <ListItem key={cat.id} to={`/products?cid=${cat.id}&cname=${cat.name}`} title={cat.name} subs={cat.subs} />
+                                    ))
+                                }
+                            </ul>
+                        </NavigationMenuContent>
+                    </NavigationMenuItem>
+                </NavigationMenuList>
+            </NavigationMenu>
         </nav>
     )
 }
+function ListItem({to,title,subs}:{to:string,title:string,subs:SubCategoryType[]|null}){
+    return (
+        <li>
+            <NavigationMenuLink asChild>
+                <Link
+                    to={to}
+                    className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-base font-medium"
+                >
+                    {title}
+                </Link>
+            </NavigationMenuLink>
+            <hr className="my-1 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-25 dark:opacity-100" />
+            <ul>
+                {subs&&subs.map(sub=>(
+                    <li>
+                        <Link className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-base font-medium capitalize" 
+                        to={`${to}&sid=${sub.id}&sname=${sub.name}`}>
+                            {sub.name}
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </li>
+    )
+}
+
+ListItem.displayName = "ListItem"
 
 export default MainNav

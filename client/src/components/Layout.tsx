@@ -1,21 +1,23 @@
 import { useEffect } from "react"
 import SiteHeader from "./Navigation/SiteHeader"
+import { Outlet } from "react-router-dom"
+import { CategoryProvider } from "@/context/CategoryContext"
 
-type RootLayoutProps = {
-    children:React.ReactNode
-}
 
-function RootLayout({children}:RootLayoutProps){
+
+function RootLayout(){
     useEffect(() => {
         document.body.classList.add("min-h-screen", "bg-background", "antialiased")
     })
     return <>
+    <CategoryProvider>
         <div className="relative min-h-screen flex flex-col">
             <SiteHeader/>
             <div className="flex-1">
-                {children}
+                <Outlet/>
             </div>
         </div>
+    </CategoryProvider>
     </>
 }
 
