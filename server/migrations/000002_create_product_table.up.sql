@@ -26,9 +26,17 @@ CREATE INDEX IF NOT EXISTS tbl_product_search_idx  ON tbl_product USING GIN(sear
 
 CREATE TABLE IF NOT EXISTS tbl_attribute(
     id SERIAL PRIMARY KEY,
-    name VARCHAR(20) NOT NULL UNIQUE,
-    attribute_type VARCHAR(10) CHECK(attribute_type IN ('text','number','date','time','datetime')) DEFAULT 'text'
+    name VARCHAR(20) NOT NULL UNIQUE
 );
+
+CREATE TABLE IF NOT EXISTS tbl_attribute_value(
+    id SERIAL PRIMARY KEY,
+    value VARCHAR(255) NOT NULL,
+    attribute_id INT NOT NULL,
+    FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS tbl_attribute_value_attribute_id_idx ON tbl_attribute_value(attribute_id);
 
 CREATE TABLE IF NOT EXISTS tbl_category_attribute(
     attribute_id INT,
@@ -37,14 +45,14 @@ CREATE TABLE IF NOT EXISTS tbl_category_attribute(
     FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE,
     FOREIGN KEY(category_id) REFERENCES tbl_category(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS tbl_category_attribute_category_id ON tbl_category_attribute(category_id);
 
 CREATE TABLE IF NOT EXISTS tbl_product_attribute(
     product_id INT,
-    attribute_id INT,
-    value VARCHAR(255) NOT NULL,
-    PRIMARY KEY (product_id,attribute_id),
+    value_id INT,
+    PRIMARY KEY (product_id,value_id),
     FOREIGN KEY(product_id) REFERENCES tbl_product(id) ON DELETE CASCADE,
-    FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE
+    FOREIGN KEY(value_id) REFERENCES tbl_attribute_value(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS tbl_product_attribute_product_id ON tbl_product_attribute(product_id);

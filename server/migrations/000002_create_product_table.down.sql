@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS tbl_product_m2m_tags CASCADE;
 DROP TABLE IF EXISTS tbl_category_attribute CASCADE;
 DROP TABLE IF EXISTS tbl_product_attribute CASCADE;
+DROP TABLE IF EXISTS tbl_attribute_value CASCADE;
 DROP TABLE IF EXISTS tbl_attribute CASCADE;
 DROP TABLE IF EXISTS tbl_category CASCADE;
 DROP TABLE IF EXISTS tbl_product CASCADE;

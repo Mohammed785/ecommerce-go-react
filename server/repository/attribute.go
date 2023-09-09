@@ -5,6 +5,7 @@ import (
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/jmoiron/sqlx"
 )
 
 type attributeRepository struct {}
@@ -15,19 +16,14 @@ func (a *attributeRepository) FindAll()(attributes []models.Attribute,err error)
 	return attributes,err
 }
 
-func (a *attributeRepository) FindType(attrType string)(attributes []models.Attribute,err error){
-	err=globals.DB.Select(&attributes,"SELECT * FROM tbl_attribute WHERE attribute_type=$1",attrType)
-	return attributes,err
-}
-
 func (a *attributeRepository) Create(name,attributeType string) error {
-	_,err:=globals.DB.Exec("INSERT INTO tbl_attribute(name,attribute_type) VALUES ($1,$2)",name,attributeType)
+	_,err:=globals.DB.Exec("INSERT INTO tbl_attribute(name) VALUES ($1)",name)
 	return err
 }
 type AttributeCreate struct{
 	Name string `json:"name" binding:"required,max=255"`
-	AttributeType string `json:"attribute_type" db:"attribute_type" goqu:"defaultifempty" binding:"omitempty,oneof= text number datetime date time"`
-	CategoriesIds []int `json:"categories_ids" db:"-" binding:"omitempty,dive,min=1"` 
+	Values []string `json:"values" db:"-" binding:"required,min=1,unique"`
+	CategoriesIds []int `json:"categories_ids" db:"-" binding:"omitempty,min=1,unique"`
 }
 
 type CategoryAttribute struct{
@@ -35,16 +31,17 @@ type CategoryAttribute struct{
 	CategoryId int `json:"category_id" db:"category_id" binding:"required,min=1"`	
 }
 
-func (a *attributeRepository) CreateBulk(attributes ...AttributeCreate) error{
+func (a *attributeRepository) CreateBulk(attributes ...AttributeCreate) ([]int,error){
 	sql,_,_ := globals.Dialect.Insert("tbl_attribute").Rows(attributes).Returning("id").ToSQL()
 	rows,err:=globals.DB.Queryx(sql)
 	if err!=nil{
-		return err
+		return nil,err
 	}
 	defer rows.Close()
 	var id int
 	attributes_ids := make([]int,0,len(attributes))
 	category_attributes:=make([]CategoryAttribute,0,len(attributes));
+	attribute_values:=make([]goqu.Record,0,len(attributes));
 	for rows.Next(){
 		err=rows.Scan(&id)
 		if err!=nil{
@@ -57,10 +54,39 @@ func (a *attributeRepository) CreateBulk(attributes ...AttributeCreate) error{
 		for _,category_id := range attr.CategoriesIds{
 			category_attributes = append(category_attributes, CategoryAttribute{AttributeId: id,CategoryId: category_id})
 		}
+		for _,value:=range attr.Values{
+			attribute_values = append(attribute_values, goqu.Record{"attribute_id":id,"value":value})
+		}
+	}
+	sql,_,_=globals.Dialect.Insert("tbl_attribute_value").Rows(attribute_values).ToSQL()
+	_,err=globals.DB.Exec(sql)
+	if err!=nil{
+		return nil,err
 	}
 	sql,_,_=globals.Dialect.Insert("tbl_category_attribute").Rows(category_attributes).ToSQL()
 	_,err=globals.DB.Exec(sql)
+	if err!=nil{
+		return nil,err
+	}
+	return attributes_ids,err
+}
 
+func (a *attributeRepository) AddValues(attributeId string,values []string) error{
+	rows := helpers.Map[string,goqu.Record](values,func(val string) goqu.Record {
+		return goqu.Record{"attribute_id": attributeId,"value": val}
+	})
+	sql,_,_ := globals.Dialect.Insert("tbl_attribute_value").Rows(rows).ToSQL()
+	_,err:=globals.DB.Exec(sql)
+	return err
+}
+
+func (a *attributeRepository) DeleteValues(values []int) error{
+	query,args,err:=sqlx.In("DELETE FROM tbl_attribute_value WHERE id IN (?)", values)
+	if err!=nil{
+		return err
+	}
+	query=globals.DB.Rebind(query)
+	_,err=globals.DB.Exec(query,args...)
 	return err
 }
 

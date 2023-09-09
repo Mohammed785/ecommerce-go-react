@@ -22,7 +22,7 @@ type review struct{
 
 func (r *reviewRepository) Find(productId string,pagination *helpers.PaginationOptions)(reviews []review,err error){
 	query:=`SELECT r.rate,r.comment,r.created_at,r.user_id,CONCAT(u.first_name,' ',u.last_name) AS name FROM tbl_review AS r LEFT JOIN tbl_user AS u ON u.id=r.user_id WHERE r.product_id=$1`
-	if pagination.OrderBy=="desc"{
+	if pagination.Order=="desc"{
 		query+=` AND id < $2 ORDER BY ID DESC`
 	}else{
 		query+=` AND id > $2 ORDER BY ID ASC`

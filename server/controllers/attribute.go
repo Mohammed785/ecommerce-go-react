@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/Mohammed785/ecommerce/helpers"
-	"github.com/Mohammed785/ecommerce/models"
 	"github.com/Mohammed785/ecommerce/repository"
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +12,6 @@ import (
 
 type attributeUpdate struct{
 	Name *string `json:"name" binding:"omitempty,max=255"`
-	AttributeType string `json:"attribute_type" db:"attribute_type" goqu:"defaultifempty" binding:"omitempty,oneof= text number datetime date time"`
 }
 
 type attributesCreate struct{
@@ -34,14 +32,7 @@ type attributeController struct{}
 var AttributeController *attributeController = &attributeController{}
 
 func (a *attributeController) FindAll(ctx *gin.Context){
-	attrType:= ctx.Query("type")
-	var attributes []models.Attribute
-	var err error
-	if attrType!=""{
-		attributes,err=repository.AttributeRepository.FindType(attrType);
-	}else{
-		attributes,err=repository.AttributeRepository.FindAll();
-	}
+	attributes,err:=repository.AttributeRepository.FindAll();
 	if err!=nil{
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
@@ -56,7 +47,44 @@ func (a *attributeController) Create(ctx *gin.Context){
 		return
 	}
 
-	err:=repository.AttributeRepository.CreateBulk(data.Attributes...)
+	ids,err:=repository.AttributeRepository.CreateBulk(data.Attributes...)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusAccepted,gin.H{"attributes":ids})
+}
+
+func (a *attributeController) AddValues(ctx *gin.Context){
+	attributeId:=ctx.Param("id")
+	var data struct{
+		Values []string `json:"values" binding:"required,min=1,unique"`
+	}
+	if err:=ctx.ShouldBindJSON(&data);err!=nil{
+		helpers.SendValidationError(ctx,err)
+		return
+	}
+	err:=repository.AttributeRepository.AddValues(attributeId,data.Values);
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	ctx.Status(http.StatusAccepted)
+}
+
+func (a *attributeController) DeleteValues(ctx *gin.Context){
+	var data struct{
+		Values []int `json:"values" binding:"required,min=1,unique"`
+	}
+	if err:=ctx.ShouldBindJSON(&data);err!=nil{
+		helpers.SendValidationError(ctx,err)
+		return
+	}
+	err:=repository.AttributeRepository.DeleteValues(data.Values);
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
 			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})

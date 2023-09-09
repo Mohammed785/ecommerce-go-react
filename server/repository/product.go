@@ -83,7 +83,7 @@ func (p *productRepository) FindOne(identifier string)(product models.Product,er
 	return product,err
 }
 
-func (p *productRepository) Create(product interface{},attributes []models.ProductAttribute) (int,error){
+func (p *productRepository) Create(product interface{},attributes []int) (int,error){
 	sql,_,_ := globals.Dialect.Insert("tbl_product").Rows(product).Returning("id").ToSQL()
 	var Id int;
 	tx,err:=globals.DB.Beginx();
@@ -97,12 +97,15 @@ func (p *productRepository) Create(product interface{},attributes []models.Produ
 		tx.Rollback()
 		return 0,err
 	}
+	attrs:=make([]goqu.Record,0,len(attributes))
 	for _,attr:= range attributes{
-		_,err = tx.Exec("INSERT INTO tbl_product_attribute(product_id,attribute_id,value) VALUES($1,$2,$3)",Id,attr.AttributeId,attr.Value)
-		if err!=nil{
-			tx.Rollback()
-			return 0,err
-		}
+		attrs = append(attrs, goqu.Record{"product_id": Id,"value_id": attr})
+	}
+	sql,_,_ = globals.Dialect.Insert("tbl_product_attribute").Rows(attrs).ToSQL()
+	_,err=globals.DB.Exec(sql)
+	if err!=nil{
+		tx.Rollback()
+		return 0,err
 	}
 	err = tx.Commit()
 	return Id,err

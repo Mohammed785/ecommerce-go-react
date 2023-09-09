@@ -50,7 +50,7 @@ func parseFieldError(err validator.FieldError) string{
 	case "datetime":
 		return "invalid date time"
 	case "unique":
-		return fmt.Sprintf("%s should contain only unique values",err.Param())
+		return fmt.Sprintf("%s should contain only unique values",err.Field())
 	case "eqcsfield":
 		return fmt.Sprintf("%s must equal %s",err.Field(),err.Param())
 	default:

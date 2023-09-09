@@ -37,7 +37,7 @@ func (c *categoryController) Find(ctx *gin.Context){
 			for _,match := range matches{
 				items := strings.Split(match[1], ",")
 				id,_ := strconv.Atoi(items[0])
-				item := struct {Id int;Name string}{Id:id,Name:items[1]};
+				item := struct {Id int `json:"id"`;Name string `json:"name"`}{Id:id,Name:items[1]};
 				categories[i].Subs = append(categories[i].Subs,item)
 			}
 		}		

@@ -25,8 +25,8 @@ var ProductController *productController = &productController{}
 
 
 type product struct{
-	Product productCreate
-	Attributes []models.ProductAttribute `json:"attributes" form:"attributes" binding:"dive"`
+	Product productCreate `json:"product" binding:"required,dive"`
+	Attributes []int `json:"attributes" form:"attributes" binding:"required,min=1,dive,min=1"`
 }
 
 type productCreate struct{
@@ -102,7 +102,7 @@ func (p *productController) Find(ctx *gin.Context){
 		exp["price"] = goqu.Op{"gte":params.MinPrice}
 	}
 	if params.Category!=nil{
-		exp["category_id"] = *&params.Category
+		exp["category_id"] = *params.Category
 	}
 	if params.InStock!=nil{
 		exp["stock"] = goqu.Op{"gt":"0"}

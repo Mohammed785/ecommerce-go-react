@@ -23,7 +23,9 @@ func SetupProductRoute(router *gin.RouterGroup){
 	attributesGroup := router.Group("/attribute")
 	attributesGroup.GET("",controllers.AttributeController.FindAll)
 	attributesGroup.POST("/:id/category",controllers.AttributeController.AddToCategory)
+	attributesGroup.POST("/:id/values",controllers.AttributeController.AddValues)
 	attributesGroup.POST("",controllers.AttributeController.Create)
+	attributesGroup.DELETE("/values",controllers.AttributeController.DeleteValues)
 	attributesGroup.PUT("/:id",controllers.AttributeController.Update)
 	attributesGroup.DELETE("/:id",controllers.AttributeController.Delete)
 
