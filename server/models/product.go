@@ -15,8 +15,8 @@ type Product struct{
 	Price float64 `db:"price" json:"price"`
 	Stock int `db:"stock" json:"stock"`
 	Sku string `db:"sku" json:"sku"`
-	CreatedAt *time.Time `db:"created_at" json:"created_at"`
-	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at"`
+	CreatedAt *time.Time `db:"created_at" json:"createdAt"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deletedAt"`
 	Category *Category `db:"cat"`
 	Attrs *string `json:"-" db:"attrs"`
 	Imgs *string `json:"-" db:"imgs"`
@@ -27,32 +27,31 @@ type Product struct{
 type Category struct{
 	Id int `json:"id"`
 	Name string `json:"name"`
-	ParentId *int `json:"parent_id" db:"parent_id"`
+	ParentId *int `json:"parentId" db:"parent_id"`
 	SubsArr *string `json:"-" db:"subs"`
-	Subs []struct{Id int;Name string} `json:"subs" db:"-"`
+	Subs []struct{Id int `json:"id"`;Name string `json:"name"`} `json:"subs" db:"-"`
 }
 
 type Attribute struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name" binding:"required,max=255"`
-	AttributeType string `db:"attribute_type" json:"attribute_type" binding:"omitempty,oneof text number date time datetime" goqu:"defaultifempty"`
+	AttributeType string `db:"attribute_type" json:"attributeType" binding:"omitempty,oneof text number date time datetime" goqu:"defaultifempty"`
 }
 
 type ProductAttributes struct{
 	Id int `db:"id" json:"id"`
 	Value string `db:"value" json:"value"`
-	AttributeType string `db:"attribute_type" json:"attribute_type"`
 }
 
 type ProductAttribute struct{
-	AttributeId int `json:"attribute_id" form:"attribute_id" db:"attribute_id" binding:"required"`
-	Value string `json:"value" form:"value" binding:"required,max=255"`
+	AttributeId int `json:"attributeId" db:"attribute_id" binding:"required,min=1"`
+	ValueId int `json:"valueId" binding:"required,min=1"`
 }
 
 type ProductImage struct{
 	Id int `json:"id"`
 	Name string `json:"name"`
-	IsPrimary bool `json:"is_primary"`
+	IsPrimary bool `json:"isPrimary"`
 }
 
 type ProductSearch struct{

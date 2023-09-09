@@ -26,7 +26,7 @@ var ProductController *productController = &productController{}
 
 type product struct{
 	Product productCreate `json:"product" binding:"required,dive"`
-	Attributes []int `json:"attributes" form:"attributes" binding:"required,min=1,dive,min=1"`
+	Attributes []models.ProductAttribute `json:"attributes" form:"attributes" binding:"required,min=1,unique=AttributeId,dive"`
 }
 
 type productCreate struct{

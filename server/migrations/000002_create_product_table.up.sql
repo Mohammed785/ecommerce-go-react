@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS tbl_attribute_value(
 CREATE INDEX IF NOT EXISTS tbl_attribute_value_attribute_id_idx ON tbl_attribute_value(attribute_id);
 
 CREATE TABLE IF NOT EXISTS tbl_category_attribute(
-    attribute_id INT,
-    category_id INT,
+    attribute_id INT NOT NULL,
+    category_id INT NOT NULL,
     PRIMARY KEY(attribute_id,category_id),
     FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE,
     FOREIGN KEY(category_id) REFERENCES tbl_category(id) ON DELETE CASCADE
@@ -48,10 +48,12 @@ CREATE TABLE IF NOT EXISTS tbl_category_attribute(
 CREATE INDEX IF NOT EXISTS tbl_category_attribute_category_id ON tbl_category_attribute(category_id);
 
 CREATE TABLE IF NOT EXISTS tbl_product_attribute(
-    product_id INT,
-    value_id INT,
-    PRIMARY KEY (product_id,value_id),
+    product_id INT NOT NULL,
+    attribute_id INT NOT NULL,
+    value_id INT NOT NULL,
+    PRIMARY KEY (product_id,attribute_id),
     FOREIGN KEY(product_id) REFERENCES tbl_product(id) ON DELETE CASCADE,
+    FOREIGN KEY(attribute_id) REFERENCES tbl_attribute(id) ON DELETE CASCADE,
     FOREIGN KEY(value_id) REFERENCES tbl_attribute_value(id) ON DELETE CASCADE
 );
 

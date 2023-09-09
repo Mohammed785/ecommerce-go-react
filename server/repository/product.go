@@ -77,13 +77,14 @@ func (p *productRepository) FindOne(identifier string)(product models.Product,er
 	for _,match := range attrs_matches{
 		fields := strings.Split(match[1], ",")
 		id,_ := strconv.Atoi(fields[0])
-		item := models.ProductAttributes{Id:id,Value:strings.Trim(fields[1],`\"`) ,AttributeType:fields[2] };
+		// FIX:
+		item := models.ProductAttributes{Id:id,Value:strings.Trim(fields[1],`\"`) , };
 		product.Attributes = append(product.Attributes,item)
 	}
 	return product,err
 }
 
-func (p *productRepository) Create(product interface{},attributes []int) (int,error){
+func (p *productRepository) Create(product interface{},attributes []models.ProductAttribute) (int,error){
 	sql,_,_ := globals.Dialect.Insert("tbl_product").Rows(product).Returning("id").ToSQL()
 	var Id int;
 	tx,err:=globals.DB.Beginx();
@@ -99,10 +100,10 @@ func (p *productRepository) Create(product interface{},attributes []int) (int,er
 	}
 	attrs:=make([]goqu.Record,0,len(attributes))
 	for _,attr:= range attributes{
-		attrs = append(attrs, goqu.Record{"product_id": Id,"value_id": attr})
+		attrs = append(attrs, goqu.Record{"product_id": Id,"value_id": attr.ValueId,"attribute_id":attr.AttributeId})
 	}
 	sql,_,_ = globals.Dialect.Insert("tbl_product_attribute").Rows(attrs).ToSQL()
-	_,err=globals.DB.Exec(sql)
+	_,err=tx.Exec(sql)
 	if err!=nil{
 		tx.Rollback()
 		return 0,err
