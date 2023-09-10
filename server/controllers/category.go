@@ -54,8 +54,7 @@ func (c *categoryController) Find(ctx *gin.Context){
 
 func (c *categoryController) ListAttributes(ctx *gin.Context){
 	categoryId := ctx.Param("id")
-	_,withValues := ctx.GetQuery("values")
-	categories,err := repository.AttributeRepository.ListCategory(categoryId,withValues);
+	categories,err := repository.AttributeRepository.ListCategory(categoryId);
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError,gin.H{"message":err.Error()})

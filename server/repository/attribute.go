@@ -33,7 +33,7 @@ type attributesWithValues struct{
 	Values []attributeValue `json:"values"`
 }
 
-func (a *attributeRepository) ListCategory(categoryId string,withValues bool) (map[int]attributesWithValues, error){
+func (a *attributeRepository) ListCategory(categoryId string) (map[int]attributesWithValues, error){
 	attrs := make([]categoryAttribute,0)
 	err := globals.DB.Select(&attrs,`SELECT attr.id AS "attributeId",attr_val.id AS "valueId",attr.name,attr_val.value 
 		FROM tbl_category_attribute ca 

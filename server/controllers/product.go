@@ -58,7 +58,15 @@ type FindQueryParams struct{
 	InStock *bool `form:"in_stock" binding:"omitempty"`
 }
 
+type productAttribute struct{
+	ProductId int `json:"-" db:"product_id"`
+	AttributeId int `json:"attributeId" db:"attribute_id" binding:"required,min=1"`
+	ValueId int `json:"valueId" db:"value_id" binding:"required,min=1"`
+}
 
+type productAttributes struct{
+	Attributes []productAttribute `json:"attributes" binding:"required,min=1,unique=AttributeId,dive"`
+}
 
 func (p *productController) Search(ctx *gin.Context){
 	keyword,exists:=ctx.GetQuery("q")
