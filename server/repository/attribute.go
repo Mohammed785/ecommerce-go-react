@@ -16,6 +16,45 @@ func (a *attributeRepository) FindAll()(attributes []models.Attribute,err error)
 	return attributes,err
 }
 
+type categoryAttribute struct{
+	AttributeId int `db:"attributeId"`
+	AttributeValueId int `db:"valueId"`
+	AttributeName string `db:"name"`
+	AttributeValue string `db:"value"`
+}
+
+type attributeValue struct{
+	Id int `json:"id"`
+	Value string `json:"value"`
+}
+
+type attributesWithValues struct{
+	Name string `json:"name"`
+	Values []attributeValue `json:"values"`
+}
+
+func (a *attributeRepository) ListCategory(categoryId string,withValues bool) (map[int]attributesWithValues, error){
+	attrs := make([]categoryAttribute,0)
+	err := globals.DB.Select(&attrs,`SELECT attr.id AS "attributeId",attr_val.id AS "valueId",attr.name,attr_val.value 
+		FROM tbl_category_attribute ca 
+		JOIN tbl_attribute attr ON attr.id = ca.attribute_id
+		JOIN tbl_attribute_value attr_val ON attr_val.attribute_id = ca.attribute_id
+		WHERE ca.category_id = $1`,categoryId)
+	if err!=nil{
+		return nil,err
+	}
+	attributes := make(map[int]attributesWithValues)
+	for _,attr := range attrs{
+		if entry,ok:=attributes[attr.AttributeId];ok{
+			entry.Values = append(entry.Values, attributeValue{Id: attr.AttributeValueId,Value: attr.AttributeValue})
+			attributes[attr.AttributeId] = entry
+		}else{
+			attributes[attr.AttributeId] = attributesWithValues{Name: attr.AttributeName,Values: []attributeValue{attributeValue{Id: attr.AttributeValueId,Value: attr.AttributeValue}}}
+		}
+	}
+	return attributes,nil
+}
+
 func (a *attributeRepository) Create(name,attributeType string) error {
 	_,err:=globals.DB.Exec("INSERT INTO tbl_attribute(name) VALUES ($1)",name)
 	return err

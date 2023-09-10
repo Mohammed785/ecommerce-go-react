@@ -35,12 +35,13 @@ type Category struct{
 type Attribute struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name" binding:"required,max=255"`
-	AttributeType string `db:"attribute_type" json:"attributeType" binding:"omitempty,oneof text number date time datetime" goqu:"defaultifempty"`
 }
 
 type ProductAttributes struct{
-	Id int `db:"id" json:"id"`
-	Value string `db:"value" json:"value"`
+	AttributeId int `json:"attributeId"`
+	ValueId int `json:"valueId"`
+	Name string `json:"name"`
+	Value string `json:"value"`
 }
 
 type ProductAttribute struct{

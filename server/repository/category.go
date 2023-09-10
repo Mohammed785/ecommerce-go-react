@@ -25,13 +25,6 @@ func (c *categoryRepository) ListWithSubs()(categories []models.Category,err err
 	return categories,err
 }
 
-
-func (c *categoryRepository) GetCategoryAttributes(categoryId string)(attributes []models.Attribute,err error){
-	err= globals.DB.Select(&attributes,`SELECT attr.id,attr.name,attr.attribute_type FROM tbl_category_attribute cat_attr 
-	JOIN tbl_attribute attr ON attr.id=cat_attr.attribute_id WHERE category_id=$1`,categoryId)
-	return
-}
-
 func (c *categoryRepository) Create(name string,parent_id *int)error{
 	_,err:=globals.DB.Exec("INSERT INTO tbl_category(name,parent_id) VALUES($1,$2)",name,parent_id)
 	return err

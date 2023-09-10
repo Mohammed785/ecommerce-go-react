@@ -19,7 +19,7 @@ var ProductRepository *productRepository = &productRepository{}
 
 func (p *productRepository) Search(keyword string,pagination *helpers.PaginationOptions)(products []models.ProductSearch,err error){
 	query := `SELECT p.id,p.name,p.price,im.img_name AS image,cat.id AS "cat.id",cat.name AS "cat.name",
-	ts_rank(search,websearch_to_tsquery('english',$1)) AS rank FROM tbl_product p 
+	ts_rank_cd(search,websearch_to_tsquery('english',$1)) AS rank FROM tbl_product p 
 	LEFT JOIN tbl_category AS cat ON p.category_id=cat.id LEFT JOIN tbl_product_image im ON im.product_id=p.id 
 	AND im.primary_img=true WHERE search @@ websearch_to_tsquery('english',$1) ORDER BY rank DESC LIMIT $2`
 	err=globals.DB.Select(&products,query,keyword,pagination.Limit)
@@ -55,8 +55,10 @@ func (p *productRepository) FindOne(identifier string)(product models.Product,er
 		GROUP BY 1
 	)img ON true
 	LEFT JOIN LATERAL(
-		SELECT product_id,ARRAY_AGG((attr.id,pa.value,attr.attribute_type)) AS attrs 
-		FROM tbl_product_attribute pa JOIN tbl_attribute attr ON attr.id=pa.attribute_id 
+		SELECT product_id,ARRAY_AGG((attr.id,attr_val.id,attr.name,attr_val.value)) AS attrs 
+		FROM tbl_product_attribute pa 
+		JOIN tbl_attribute attr ON attr.id=pa.attribute_id 
+		JOIN tbl_attribute_value attr_val ON pa.value_id=attr_val.id  
 		WHERE product_id=pr.id
 		GROUP BY 1
 	)attrs ON true
@@ -76,9 +78,9 @@ func (p *productRepository) FindOne(identifier string)(product models.Product,er
 	attrs_matches := re.FindAllStringSubmatch(*product.Attrs,-1)
 	for _,match := range attrs_matches{
 		fields := strings.Split(match[1], ",")
-		id,_ := strconv.Atoi(fields[0])
-		// FIX:
-		item := models.ProductAttributes{Id:id,Value:strings.Trim(fields[1],`\"`) , };
+		attrId,_ := strconv.Atoi(fields[0])
+		valId,_ := strconv.Atoi(fields[1])
+		item := models.ProductAttributes{AttributeId: attrId,ValueId: valId,Name: strings.Trim(fields[2],`\"`),Value:strings.Trim(fields[3],`\"`)};
 		product.Attributes = append(product.Attributes,item)
 	}
 	return product,err

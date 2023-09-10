@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS tbl_product(
     description TEXT,
     price DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL,
-    sku CHAR(16) NOT NULL UNIQUE,
+    sku CHAR(12) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP DEFAULT NULL,
     category_id INT,
