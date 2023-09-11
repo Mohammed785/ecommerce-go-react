@@ -41,7 +41,7 @@ function MobileNav(){
                                 <div key={cat.id} className="flex flex-col space-y-3 pt-6">
                                     <h5 className="font-medium">{cat.name}</h5>
                                     {cat.subs && cat.subs.map((sub) => (
-                                        <Link to={`/products?cid=${cat.id}&cname=${cat.name}&sid=${sub.id}&sname=${sub.name}`} className="text-muted-foreground">
+                                        <Link key={sub.id} to={`/products?cid=${cat.id}&cname=${cat.name}&sid=${sub.id}&sname=${sub.name}`} className="text-muted-foreground">
                                             {sub.name}
                                         </Link>
                                     ))
