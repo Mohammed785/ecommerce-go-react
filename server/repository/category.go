@@ -25,6 +25,13 @@ func (c *categoryRepository) ListWithSubs()(categories []models.Category,err err
 	return categories,err
 }
 
+func (c *categoryRepository) Find(categoryId string)(category models.Category,err error){
+	err = globals.DB.Get(&category,`SELECT cat.id,cat.name,ARRAY_AGG((sub.id,sub.name))::text[] subs 
+	FROM tbl_category cat LEFT JOIN tbl_category sub ON sub.parent_id=cat.id 
+	WHERE cat.id =$1 GROUP BY cat.id,cat.name`,categoryId)
+	return category,err
+}
+
 func (c *categoryRepository) Create(name string,parent_id *int)error{
 	_,err:=globals.DB.Exec("INSERT INTO tbl_category(name,parent_id) VALUES($1,$2)",name,parent_id)
 	return err

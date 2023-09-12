@@ -25,32 +25,51 @@ type categoryUpdate struct{
 	ParentId *int `json:"parent_id" db:"parent_id" binding:"omitempty,min=1"`
 }
 
-func (c *categoryController) Find(ctx *gin.Context){
+func extractSubs(categories []models.Category){
+	pattren :=`\((.*?)\)`
+	re:=regexp.MustCompile(pattren)
+	for i,cat := range categories{
+		matches := re.FindAllStringSubmatch(*cat.SubsArr,-1)
+		for _,match := range matches{
+			items := strings.Split(match[1], ",")
+			id,_ := strconv.Atoi(items[0])
+			item := struct {Id int `json:"id"`;Name string `json:"name"`}{Id:id,Name:strings.Trim(items[1],`\"`)};
+			categories[i].Subs = append(categories[i].Subs,item)
+		}
+	}	
+}
+
+func (c *categoryController) List(ctx *gin.Context){
 	_,witSubs := ctx.GetQuery("subs");
 	var err error;var categories []models.Category
 	if witSubs{
 		categories,err = repository.CategoryRepository.ListWithSubs()
-		pattren :=`\((.*?)\)`
-		re:=regexp.MustCompile(pattren)
-		for i,cat := range categories{
-			matches := re.FindAllStringSubmatch(*cat.SubsArr,-1)
-			for _,match := range matches{
-				items := strings.Split(match[1], ",")
-				id,_ := strconv.Atoi(items[0])
-				item := struct {Id int `json:"id"`;Name string `json:"name"`}{Id:id,Name:items[1]};
-				categories[i].Subs = append(categories[i].Subs,item)
-			}
-		}		
+		extractSubs(categories)	
 	}else{
 		categories,err = repository.CategoryRepository.List()
 	}
 	if err!=nil{
-		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
 		return 
 	}
 	ctx.JSON(http.StatusOK,gin.H{"categories":categories})
 }
 
+func (c *categoryController) Find(ctx *gin.Context){
+	categoryId := ctx.Param("id")
+	category,err := repository.CategoryRepository.Find(categoryId)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return 
+	}
+	temp := []models.Category{category}
+	extractSubs(temp)
+	ctx.JSON(http.StatusOK,gin.H{"category":temp[0]})
+}
 
 func (c *categoryController) ListAttributes(ctx *gin.Context){
 	categoryId := ctx.Param("id")
