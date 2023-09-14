@@ -13,8 +13,12 @@ type categoryRepository struct{}
 var CategoryRepository *categoryRepository = &categoryRepository{}
 
 
-func (c *categoryRepository) List()(categories []models.Category,err error){
-	err = globals.DB.Select(&categories,"SELECT id,name,parent_id FROM tbl_category")
+func (c *categoryRepository) List(parents bool)(categories []models.Category,err error){
+	query := "SELECT id,name,parent_id FROM tbl_category"
+	if parents{
+		query += " WHERE parent_id IS NULL"
+	}
+	err = globals.DB.Select(&categories,query)
 	return categories,err
 }
 

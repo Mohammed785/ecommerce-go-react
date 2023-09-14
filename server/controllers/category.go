@@ -41,12 +41,13 @@ func extractSubs(categories []models.Category){
 
 func (c *categoryController) List(ctx *gin.Context){
 	_,witSubs := ctx.GetQuery("subs");
+	_,parents := ctx.GetQuery("parents");
 	var err error;var categories []models.Category
 	if witSubs{
 		categories,err = repository.CategoryRepository.ListWithSubs()
 		extractSubs(categories)	
 	}else{
-		categories,err = repository.CategoryRepository.List()
+		categories,err = repository.CategoryRepository.List(parents)
 	}
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"category"){
