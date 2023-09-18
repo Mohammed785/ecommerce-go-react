@@ -58,7 +58,7 @@ function ListItem({to,title,subs}:{to:string,title:string,subs:SubCategoryType[]
             <hr className="my-1 h-px border-t-0 bg-transparent bg-gradient-to-r from-transparent via-zinc-500 to-transparent opacity-25 dark:opacity-100" />
             <ul>
                 {subs&&subs.map(sub=>(
-                    <li>
+                    <li key={sub.id}>
                         <Link className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-base font-medium capitalize" 
                         to={`${to}&sid=${sub.id}&sname=${sub.name}`}>
                             {sub.name}

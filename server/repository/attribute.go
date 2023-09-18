@@ -29,11 +29,12 @@ type attributeValue struct{
 }
 
 type attributesWithValues struct{
+	Id int `json:"id"`
 	Name string `json:"name"`
 	Values []attributeValue `json:"values"`
 }
 
-func (a *attributeRepository) ListCategory(categoryId string) (map[int]attributesWithValues, error){
+func (a *attributeRepository) ListCategoryAttributes(categoryId string) (map[int]attributesWithValues, error){
 	attrs := make([]categoryAttribute,0)
 	err := globals.DB.Select(&attrs,`SELECT attr.id AS "attributeId",attr_val.id AS "valueId",attr.name,attr_val.value 
 		FROM tbl_category_attribute ca 
@@ -49,7 +50,7 @@ func (a *attributeRepository) ListCategory(categoryId string) (map[int]attribute
 			entry.Values = append(entry.Values, attributeValue{Id: attr.AttributeValueId,Value: attr.AttributeValue})
 			attributes[attr.AttributeId] = entry
 		}else{
-			attributes[attr.AttributeId] = attributesWithValues{Name: attr.AttributeName,Values: []attributeValue{attributeValue{Id: attr.AttributeValueId,Value: attr.AttributeValue}}}
+			attributes[attr.AttributeId] = attributesWithValues{Id:attr.AttributeId,Name: attr.AttributeName,Values: []attributeValue{{Id: attr.AttributeValueId,Value: attr.AttributeValue}}}
 		}
 	}
 	return attributes,nil

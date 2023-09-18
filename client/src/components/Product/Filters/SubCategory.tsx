@@ -13,13 +13,17 @@ type SubCategoryOption = {
     label: string
 }
 
+type SubCategoryFilterProps={
+    values:number[],
+    setSubCategories:(ids:number[])=>void
+}
 
-function SubCategoryFilter() {
-    const [searchParams,setSearchParams] = useSearchParams()
+function SubCategoryFilter({ values,setSubCategories }:SubCategoryFilterProps) {
+    const [searchParams,_] = useSearchParams()
     const [subs,setSubs] = useState<SubCategoryOption[]>([])
     const {toast} = useToast()
-    const value:SubCategoryOption[] = searchParams.getAll("sid").map((id)=>{
-        return subs.find((sub)=>sub.value===parseInt(id))!
+    const value:SubCategoryOption[] = subs.filter((sub)=>{
+        return values.includes(sub.value)
     })
     const loadSubCategories = async () => {
         try {
@@ -44,11 +48,7 @@ function SubCategoryFilter() {
         loadSubCategories()
     }, [searchParams.get("cid")])
     const onChange = (values:MultiValue<SubCategoryOption>)=>{
-        searchParams.delete("sid")
-        for(const val of values){
-            searchParams.append("sid",val.value.toString())
-        }
-        setSearchParams(searchParams)
+        setSubCategories(values.map((sub)=>sub.value))
     }
     return <>
     {

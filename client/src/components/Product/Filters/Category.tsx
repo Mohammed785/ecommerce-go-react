@@ -27,8 +27,8 @@ function CategorySelect(){
         }
     }
     const onChange = (e:string)=>{
-        const name=categories.find((val)=>val.id===parseInt(e))!.name
-        setSearchParams({"cid":e,"cname":name})
+        const name=categories.find((val)=>val.id===parseInt(e))?.name
+        setSearchParams({"cid":e,"cname":name||""})
     }
     useEffect(()=>{
         loadCategories()
