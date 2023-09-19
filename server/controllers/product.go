@@ -51,13 +51,6 @@ type productUpdate struct{
 	Stock *int `json:"stock" binding:"omitempty,min=0"`
 }
 
-type FindQueryParams struct{
-	MinPrice *int `form:"min_price" binding:"omitempty,min=0"`
-	MaxPrice *int `form:"max_price" binding:"omitempty,min=0"`
-	Category *int `form:"category" binding:"omitempty,min=0"`
-	InStock *bool `form:"in_stock" binding:"omitempty"`
-}
-
 type productAttribute struct{
 	ProductId int `json:"-" db:"product_id"`
 	AttributeId int `json:"attributeId" db:"attribute_id" binding:"required,min=1"`
@@ -93,29 +86,20 @@ func (p *productController) Search(ctx *gin.Context){
 }
 
 func (p *productController) Find(ctx *gin.Context){
-	var params FindQueryParams;
+	var params repository.FindQueryParams;
 	if err:=ctx.ShouldBind(&params);err!=nil{
 		helpers.SendValidationError(ctx,err)
 		return
 	}
+	var values struct{
+		Ids []int `json:"valuesIds" binding:"omitempty"`
+	};
+	if err:=ctx.ShouldBindJSON(&values);err!=nil{
+		helpers.SendValidationError(ctx,err)
+		return
+	}
 	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("order"))
-	exp := goqu.Ex{
-		"deleted_at":nil,
-	}
-	if params.MaxPrice!=nil&&params.MinPrice!=nil{
-		exp["price"] = goqu.Op{"between":goqu.Range(params.MinPrice,params.MaxPrice)}
-	}else if params.MaxPrice!=nil{
-		exp["price"] = goqu.Op{"lte":params.MaxPrice}
-	}else if params.MinPrice!=nil{
-		exp["price"] = goqu.Op{"gte":params.MinPrice}
-	}
-	if params.Category!=nil{
-		exp["category_id"] = *params.Category
-	}
-	if params.InStock!=nil{
-		exp["stock"] = goqu.Op{"gt":"0"}
-	}
-	products,err:= repository.ProductRepository.Find(exp,&pagination,models.ProductFind{})
+	products,err:= repository.ProductRepository.Find(&params,values.Ids,&pagination,models.ProductFind{})
 	if err!=nil{
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return

@@ -17,6 +17,14 @@ type productRepository struct {}
 
 var ProductRepository *productRepository = &productRepository{}
 
+type FindQueryParams struct{
+	MinPrice *int `form:"min_price" binding:"omitempty,min=0"`
+	MaxPrice *int `form:"max_price" binding:"omitempty,min=0"`
+	MainCategory *int `form:"cid" binding:"omitempty,min=0"`
+	SubCategory *int `form:"sid" binding:"omitempty,min=0"`
+	InStock *bool `form:"in_stock" binding:"omitempty"`
+}
+
 func (p *productRepository) Search(keyword string,pagination *helpers.PaginationOptions)(products []models.ProductSearch,err error){
 	query := `SELECT p.id,p.name,p.price,im.img_name AS image,cat.id AS "cat.id",cat.name AS "cat.name",
 	ts_rank_cd(search,websearch_to_tsquery('english',$1)) AS rank FROM tbl_product p 
@@ -26,10 +34,32 @@ func (p *productRepository) Search(keyword string,pagination *helpers.Pagination
 	return
 }
 
-func (p *productRepository) Find(conditions goqu.Ex,pagination *helpers.PaginationOptions,cols... interface{}) (products []models.ProductFind,err error){
-	query:= globals.Dialect.Select("pr.id","pr.name","pr.price","pr.sku","img.img_name").From(goqu.T("tbl_product").As("pr")).
+func (p *productRepository) Find(params *FindQueryParams,valuesIds []int,pagination *helpers.PaginationOptions,cols... interface{}) (products []models.ProductFind,err error){
+	query:= globals.Dialect.Select("pr.id","pr.name","pr.price","pr.sku","pr.stock","img.img_name").From(goqu.T("tbl_product").As("pr")).
 	LeftJoin(goqu.T("tbl_product_image").As("img"),goqu.On(goqu.Ex{"img.product_id":goqu.I("pr.id"),"img.primary_img":true})).
-	Limit(pagination.Limit)
+	Limit(pagination.Limit).Distinct()
+	conditions := goqu.Ex{"deleted_at":nil}
+	if params.MaxPrice!=nil&&params.MinPrice!=nil{
+		conditions["price"] = goqu.Op{"between":goqu.Range(params.MinPrice,params.MaxPrice)}
+	}else if params.MaxPrice!=nil{
+		conditions["price"] = goqu.Op{"lte":params.MaxPrice}
+	}else if params.MinPrice!=nil{
+		conditions["price"] = goqu.Op{"gte":params.MinPrice}
+	}
+	if params.InStock!=nil{
+		conditions["stock"] = goqu.Op{"gt":"0"}
+	}
+
+	if params.SubCategory!=nil{
+		conditions["pr.category_id"] = params.SubCategory;
+	}else if params.MainCategory!=nil{
+		query = query.Join(goqu.T("tbl_category").As("ca"),
+		goqu.On(goqu.Ex{"ca.id":goqu.I("pr.category_id"),"ca.parent_id":params.MainCategory}))
+	}
+	if valuesIds!=nil{
+		query= query.Join(goqu.T("tbl_product_attribute").As("pr_attr"),
+		goqu.On(goqu.Ex{"pr_attr.product_id":goqu.I("pr.id"),"pr_attr.attribute_id":globals.Dialect.Select("attribute_id").From("tbl_attribute_value").Where(goqu.C("id").In(valuesIds))}))
+	}
 	if pagination.Order=="desc"{
 		conditions["pr.id"] = goqu.Op{"lt":pagination.Cursor}
 		query = query.Order(goqu.C("id").Desc())

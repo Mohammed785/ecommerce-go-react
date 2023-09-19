@@ -69,5 +69,6 @@ type ProductFind struct{
 	Name string `db:"name" json:"name"`
 	Sku string `db:"sku" json:"sku"`
 	Price float64 `db:"price" json:"price"`
-	Image string `db:"img_name" json:"image"`
+	Stock float64 `db:"stock" json:"stock"`
+	Image *string `db:"img_name" json:"image"`
 }
