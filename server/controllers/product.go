@@ -91,15 +91,8 @@ func (p *productController) Find(ctx *gin.Context){
 		helpers.SendValidationError(ctx,err)
 		return
 	}
-	var values struct{
-		Ids []int `json:"valuesIds" binding:"omitempty"`
-	};
-	if err:=ctx.ShouldBindJSON(&values);err!=nil{
-		helpers.SendValidationError(ctx,err)
-		return
-	}
 	pagination := helpers.NewPaginationOptions(ctx.Query("cursor"),ctx.Query("limit"),ctx.Query("order"))
-	products,err:= repository.ProductRepository.Find(&params,values.Ids,&pagination,models.ProductFind{})
+	products,err:= repository.ProductRepository.Find(&params,&pagination)
 	if err!=nil{
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
@@ -141,7 +134,7 @@ func (p *productController) Create(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.JSON(http.StatusAccepted,gin.H{"productId":productId})
+	ctx.JSON(http.StatusOK,gin.H{"productId":productId})
 }
 
 func (p *productController) AddImages(ctx *gin.Context){
@@ -176,7 +169,7 @@ func (p *productController) AddImages(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(200)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (p *productController) UpdateImage(ctx *gin.Context){
@@ -193,7 +186,7 @@ func (p *productController) UpdateImage(ctx *gin.Context){
 		ctx.AbortWithStatusJSON(http.StatusNotFound,gin.H{"message":"image not found","code":helpers.RECORD_NOT_FOUND})
 		return 
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (p *productController) DeleteImages(ctx *gin.Context){
@@ -238,6 +231,7 @@ func (p *productController) Update(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"product not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
+	ctx.Status(http.StatusNoContent)
 }
 
 func (p *productController) Delete(ctx *gin.Context){
@@ -276,7 +270,7 @@ func (p *productController) AddProductAttributes(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (p *productController) DeleteProductAttribute(ctx *gin.Context){
@@ -295,5 +289,5 @@ func (p *productController) DeleteProductAttribute(ctx *gin.Context){
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return	
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
