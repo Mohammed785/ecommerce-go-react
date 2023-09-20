@@ -85,7 +85,7 @@ func (a *AuthControllerStruct) Register(ctx *gin.Context){
 		}
 		return	
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (a *AuthControllerStruct) Logout(ctx *gin.Context){
@@ -123,6 +123,6 @@ func (a *AuthControllerStruct) ChangePassword(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"User not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 

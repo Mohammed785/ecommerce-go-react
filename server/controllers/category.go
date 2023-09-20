@@ -97,7 +97,7 @@ func (c *categoryController) Create(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 func (c *categoryController) Update(ctx *gin.Context){
 	id:=ctx.Param("id")
@@ -117,7 +117,7 @@ func (c *categoryController) Update(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"category not found","code":helpers.RECORD_NOT_FOUND})
 		return	
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 func (c *categoryController) Delete(ctx *gin.Context){
 	id:=ctx.Param("id")
@@ -132,5 +132,5 @@ func (c *categoryController) Delete(ctx *gin.Context){
 		ctx.Status(http.StatusNotFound)
 		return	
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }

@@ -45,7 +45,7 @@ func (a *attributeController) Create(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.JSON(http.StatusAccepted,gin.H{"attributes":ids})
+	ctx.JSON(http.StatusOK,gin.H{"attributes":ids})
 }
 
 func (a *attributeController) AddValues(ctx *gin.Context){
@@ -64,7 +64,7 @@ func (a *attributeController) AddValues(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (a *attributeController) DeleteValues(ctx *gin.Context){
@@ -82,7 +82,7 @@ func (a *attributeController) DeleteValues(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (a *attributeController) AddToCategory(ctx *gin.Context){
@@ -105,7 +105,7 @@ func (a *attributeController) AddToCategory(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (a *attributeController) Update(ctx *gin.Context){
@@ -126,7 +126,7 @@ func (a *attributeController) Update(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"attribute not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (a *attributeController) Delete(ctx *gin.Context){
@@ -140,6 +140,6 @@ func (a *attributeController) Delete(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"attribute not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 

@@ -52,7 +52,7 @@ func (r *reviewController) Create(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (r *reviewController) Update(ctx *gin.Context){
@@ -74,7 +74,7 @@ func (r *reviewController) Update(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"review not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.Status(http.StatusAccepted)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (r *reviewController) Delete(ctx *gin.Context){
@@ -91,5 +91,5 @@ func (r *reviewController) Delete(ctx *gin.Context){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"review not found","code":helpers.RECORD_NOT_FOUND})
 		return
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
