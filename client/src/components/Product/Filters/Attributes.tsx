@@ -1,9 +1,10 @@
 import { axiosClient } from "@/axiosClient"
 import { AxiosError } from "axios"
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react"
+import { useEffect, useState } from "react"
 import Select from "@/components/Select"
 import { MultiValue } from "react-select"
 import { useToast } from "@/components/ui/use-toast"
+import useProductContext from "@/hooks/useProductContext"
 
 type AttributeType = {
     id:number,
@@ -11,9 +12,9 @@ type AttributeType = {
     values:{id:number,value:string}[]
 }
 
-const Attributes = forwardRef((_,_ref)=>{
+function Attributes(){
     const [attributes,setAttributes] = useState<AttributeType[]>([])
-    const [values,setValues] = useState<Record<string,any>|null>({})
+    const { filters,setFilters } = useProductContext()
     const searchParams = new URLSearchParams(window.location.href)
     const {toast} = useToast()
     const loadAttributes = async()=>{
@@ -27,26 +28,21 @@ const Attributes = forwardRef((_,_ref)=>{
         }
     }
     const onChange = (attributeId:number,value:MultiValue<{value:number,label:string}>)=>{
-        setValues({...values,[attributeId]:value})
+        setFilters({ ...filters, attributeValues: { ...filters.attributeValues,[attributeId]:value}})
     }
     useEffect(()=>{
-        setValues(null)
+        setFilters({ ...filters, attributeValues:null})
         loadAttributes()
     },[searchParams.get("sid")])
-    useImperativeHandle(_ref,()=>({
-        getValues:()=>{
-            return values
-        }
-    }))
     return <>
     
     {
         attributes.map((attr)=>{
             const options = attr.values.map((val)=>({label:val.value,value:val.id}));
-            return <Select placeholder={`Select ${attr.name}`} key={attr.id} isMulti options={options} value={values?values[attr.id]:""} onChange={(value)=>onChange(attr.id,value)}/>
+            return <Select placeholder={`Select ${attr.name}`} key={attr.id} isMulti options={options} value={filters.attributeValues?filters.attributeValues[attr.id]:""} onChange={(value)=>onChange(attr.id,value)}/>
         })
     }
     </>
-})
+}
 
 export default Attributes

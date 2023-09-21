@@ -1,7 +1,7 @@
 import { Slider } from "@/components/ui/slider"
 import { Button } from "../ui/button"
 import { Label } from "../ui/label"
-import { useState,FormEvent, useRef } from "react"
+import { FormEvent } from "react"
 import { useSearchParams } from "react-router-dom"
 import SubCategoryFilter from "./Filters/SubCategory"
 import CategorySelect from "./Filters/Category"
@@ -12,35 +12,26 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "../ui/use-toast"
 import { FilterIcon } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet"
+import useProductContext from "@/hooks/useProductContext"
 
-type Filters={
-    price:number[],
-    subCategories:number[],
-    inStock:boolean
-}
 
 function ProductFilter(){
-    const [filters,setFilters] = useState<Filters>({price:[0,1e4],subCategories:[],inStock:false})
     const [searchParams,_] = useSearchParams()
-    const attributesRef = useRef()
     const {toast} = useToast()
+    const { filters, productState, setProductState,setFilters,createSearchParams} = useProductContext()
     const setSubCategories = (ids:number[])=>{
         setFilters({...filters,subCategories:ids})
     }
     const handleSubmit = async(e:FormEvent<HTMLFormElement>)=>{
         e.preventDefault()
         try {
-            const values = attributesRef?.current?.getValues()
-            const valuesIds = values && (Object.values(attributesRef?.current?.getValues()) as { label: string, value: number }[][]).flatMap((vals) => {
-                return vals.map(val => val.value)
-            })
-            const search = new URLSearchParams(location.search)
-            search.set("minPrice", filters.price[0].toString())
-            search.set("maxPrice", filters.price[1].toString())
-            filters.inStock&&search.set("inStock",'1')
-            const response = await axiosClient.get(`/product/`,{params:{...Object.fromEntries(search),valuesIds,subs:filters.subCategories}})
+            setProductState({...productState,loading:true})
+            const params = createSearchParams()
+            const response = await axiosClient.get(`/product/`,{params})
+            console.log(response.data)
+            setProductState({products:response.data.products||[],cursor:response.data.cursor,loading:false})
         } catch (error) {
-            console.error(error);            
+            setProductState({ ...productState, loading: false })
             if(error instanceof AxiosError){
                 if(error.response?.data.code==="VALIDATION"){
                     toast({variant:"destructive",description:error.response?.data.details.error})
@@ -64,10 +55,10 @@ function ProductFilter(){
                 <form className="h-full w-full mt-4 space-y-3 " onSubmit={handleSubmit}>
                     {!searchParams.has("cid")&&<CategorySelect/>}
                     {(searchParams.has("cid")&& !searchParams.has("sid")) &&<SubCategoryFilter values={filters.subCategories} setSubCategories={setSubCategories} />}
-                    {searchParams.has("sid") && <Attributes ref={attributesRef}/>}
+                    {searchParams.has("sid") && <Attributes />}
                     <div className="space-y-2">
                         <Label htmlFor="price">Price</Label>
-                        <Slider defaultValue={filters.price} min={0} max={1e4} step={100} onValueCommit={(val)=>setFilters({...filters,price:val})} minStepsBetweenThumbs={1} name="price" />
+                        <Slider defaultValue={filters.price} min={0} max={1e5} step={100} onValueCommit={(val)=>setFilters({...filters,price:val})} minStepsBetweenThumbs={1} name="price" />
                     </div>
                     <div className="items-top flex items-center space-x-2 ">
                         <Checkbox id="stock" className="w-5 h-5 rounded-md ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" name="in_stock" checked={filters.inStock} onCheckedChange={(e) => { setFilters({ ...filters, inStock:e.valueOf() as boolean})}}/>
