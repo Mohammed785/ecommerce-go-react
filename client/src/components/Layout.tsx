@@ -10,14 +10,14 @@ function RootLayout(){
         document.body.classList.add("min-h-screen", "bg-background", "antialiased")
     })
     return <>
-    <CategoryProvider>
         <div className="relative min-h-screen flex flex-col">
-            <SiteHeader/>
+            <CategoryProvider>
+                <SiteHeader/>
+            </CategoryProvider>
             <div className="flex-1">
                 <Outlet/>
             </div>
         </div>
-    </CategoryProvider>
     </>
 }
 

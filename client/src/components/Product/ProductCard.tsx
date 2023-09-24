@@ -1,22 +1,21 @@
 import { Link } from "react-router-dom";
 import imgUrl from "../../assets/temp.png"
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { MouseEvent } from "react";
+import { Product } from "@/context/ProductsContext";
 
-function ProductCard(){
+function ProductCard({product}:{product:Product}){
     const addToCart = (e:MouseEvent<HTMLButtonElement,globalThis.MouseEvent>)=>{
         e.preventDefault()
         // TODO:
     }
-    return <>
-        <div className="w-72 lg:w-64 shadow-md rounded-xl duration-500 hover:scale-105 hover:shadow-xl">
+    return <div className="w-72 lg:w-64 shadow-md rounded-xl duration-500 dark:shadow-neutral-900 hover:shadow-xl">
             <Link to={"/"}>
-                <img className="h-80 w-72 lg:w-64 object-cover rounded-t-xl" src={imgUrl} alt=""/>
-                <div className="px-4 py-3 w-72 lg:w-64 bg-accent rounded-b-xl">
+            <img className="h-60 w-72 lg:w-64 object-cover rounded-t-xl transition duration-300 ease-in-out hover:scale-105" src={imgUrl} alt=""/>                <div className="px-4 py-3 min-h-fit w-72 lg:w-64 bg-accent rounded-b-xl">
                     {/* <span className="text-gray-400 mr-3 uppercase text-xs">Brand</span> */}
-                    <p className="text-lg font-bold text-foreground block capitalize">product name.</p>
+                    <p className="text-lg font-bold text-foreground block capitalize">{product.name}</p>
                     <div className="flex items-center">
-                        <p className="text-lg font-semibold text-foreground cursor-auto my-3">$price</p>
+                        <p className="text-lg font-semibold text-foreground cursor-auto my-3">${product.price}</p>
                         {/* <del>
                             <p className="text-sm text-muted-foreground cursor-auto ml-2">$199</p>
                         </del> */}
@@ -35,7 +34,6 @@ function ProductCard(){
                 </div>
             </Link>
         </div>
-    </>
 }
 
 export default ProductCard;

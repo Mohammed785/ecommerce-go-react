@@ -28,8 +28,7 @@ function ProductFilter(){
             setProductState({...productState,loading:true})
             const params = createSearchParams()
             const response = await axiosClient.get(`/product/`,{params})
-            console.log(response.data)
-            setProductState({products:response.data.products||[],cursor:response.data.cursor,loading:false})
+            setProductState({products:response.data.products||[],cursor:response.data.cursor||-1,loading:false})
         } catch (error) {
             setProductState({ ...productState, loading: false })
             if(error instanceof AxiosError){

@@ -48,6 +48,7 @@ function ProductProvider({children}:{children:ReactNode}){
         const search = new URLSearchParams(location.search)
         search.set("minPrice", filters.price[0].toString())
         search.set("maxPrice", filters.price[1].toString())
+        productState.cursor && search.set("cursor",productState.cursor.toString())
         filters.inStock && search.set("inStock", '1')
         return {...Object.fromEntries(search), valuesIds, subs: filters.subCategories }
     }
