@@ -2,15 +2,15 @@ import { Link } from "react-router-dom";
 import imgUrl from "../../assets/temp.png"
 import { Button } from "@/components/ui/button";
 import { MouseEvent } from "react";
-import { Product } from "@/context/ProductsContext";
+import { ProductSearch } from "@/context/ProductsContext";
 
-function ProductCard({product}:{product:Product}){
+function ProductCard({product}:{product:ProductSearch}){
     const addToCart = (e:MouseEvent<HTMLButtonElement,globalThis.MouseEvent>)=>{
         e.preventDefault()
         // TODO:
     }
     return <div className="w-72 lg:w-64 shadow-md rounded-xl duration-500 dark:shadow-neutral-900 hover:shadow-xl">
-            <Link to={"/"}>
+            <Link to={`/product/${product.id}`}>
             <img className="h-60 w-72 lg:w-64 object-cover rounded-t-xl transition duration-300 ease-in-out hover:scale-105" src={imgUrl} alt=""/>                <div className="px-4 py-3 min-h-fit w-72 lg:w-64 bg-accent rounded-b-xl">
                     {/* <span className="text-gray-400 mr-3 uppercase text-xs">Brand</span> */}
                     <p className="text-lg font-bold text-foreground block capitalize">{product.name}</p>
