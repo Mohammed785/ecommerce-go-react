@@ -1,12 +1,40 @@
 import { ReactNode, createContext, useState } from "react";
 
-export type Product = {
-    id:number,
-    name:string,
-    sku:string,
-    price:number,
-    stock:number,
+export type ProductInfo = {
+    id: number,
+    name: string,
+    sku: string,
+    price: number,
+    stock: number,
+}
+
+export type ProductSearch = ProductInfo & {
     image:string
+}
+
+export type ProductCategory = {
+    id: number,
+    name: string
+}
+
+export type ProductImage = {
+    id: number,
+    name: string,
+    isPrimary: boolean
+}
+
+export type ProductAttribute = {
+    attributeId: number,
+    valueId: number,
+    name: string,
+    value: string
+}
+
+export type ProductDetails = ProductInfo & {
+    description: string | null
+    category: ProductCategory
+    images: ProductImage[]
+    attributes: ProductAttribute[]
 }
 
 type Filters = {
@@ -17,7 +45,7 @@ type Filters = {
 }
 
 type ProductStateType = {
-    products: Product[], cursor: number | null, loading: boolean
+    products: ProductSearch[], cursor: number | null, loading: boolean
 }
 
 type ProductContextType = {
