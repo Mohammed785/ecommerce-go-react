@@ -30,6 +30,7 @@ func SetupProductRoute(router *gin.RouterGroup){
 	attributesGroup.DELETE("/:id",controllers.AttributeController.Delete)
 
 	reviewRouter := router.Group("/review");
+	reviewRouter.GET("/:productId/details",controllers.ReviewController.ReviewsDetails)
 	reviewRouter.GET("/:productId",controllers.ReviewController.Find)
 	reviewRouter.POST("/:productId",controllers.ReviewController.Create)
 	reviewRouter.PUT("/:productId",controllers.ReviewController.Update)

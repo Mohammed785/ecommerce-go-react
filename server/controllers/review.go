@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/Mohammed785/ecommerce/helpers"
@@ -34,7 +36,33 @@ func (r *reviewController) Find(ctx *gin.Context){
 		}
 		return
 	}
-	ctx.JSON(http.StatusOK,gin.H{"reviews":reviews})
+	cursor:=-1;
+	if len(reviews)>=int(pagination.Limit){
+		cursor = reviews[len(reviews)-1].Author.Id
+	}
+	ctx.JSON(http.StatusOK,gin.H{"reviews":reviews,"cursor":cursor})
+}
+
+func (r *reviewController) ReviewsDetails(ctx *gin.Context){
+	productId := ctx.Param("productId")
+	userId := int(ctx.GetFloat64("uid"))
+	details,err := repository.ReviewRepository.Details(productId)
+	if err!=nil{
+		if !helpers.HandleDatabaseErrors(ctx,err,"review"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	userReview,err := repository.ReviewRepository.FindOne(productId,userId)
+	if err!=nil{
+		if errors.Is(err,sql.ErrNoRows){
+			ctx.JSON(http.StatusOK,gin.H{"details":details,"review":nil})
+		}else if !helpers.HandleDatabaseErrors(ctx,err,"review"){
+			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK,gin.H{"details":details,"review":userReview})
 }
 
 func (r *reviewController) Create(ctx *gin.Context){

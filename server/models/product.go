@@ -17,7 +17,7 @@ type Product struct{
 	Sku string `db:"sku" json:"sku"`
 	CreatedAt *time.Time `db:"created_at" json:"createdAt"`
 	DeletedAt *time.Time `db:"deleted_at" json:"deletedAt"`
-	Category *Category `db:"cat"`
+	Category *Category `db:"cat" json:"category"`
 	Attrs *string `json:"-" db:"attrs"`
 	Imgs *string `json:"-" db:"imgs"`
 	Images []ProductImage `json:"images" db:"-"`
