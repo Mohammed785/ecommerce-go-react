@@ -40,9 +40,8 @@ function RegisterForm(){
         } catch (error) {
             if(error instanceof AxiosError){
                 if (error.response?.data.code === "UNIQUE_CONSTRAINT"){
-                    form.setError("email",{message:"Email already exists"})
+                    form.setError("email",{message:"Email already exists"},{shouldFocus:true})
                 }else if(error.response?.data.code==="VALIDATION"){
-                    console.error(error.response?.data.details)
                     for(const [field,err] of Object.entries(error.response?.data.details)){
                         form.setError(field as any,{message:err as string})
                     }

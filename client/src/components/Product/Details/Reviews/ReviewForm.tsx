@@ -10,6 +10,8 @@ import { axiosClient } from "@/axiosClient";
 import { useParams } from "react-router-dom";
 import { MyReview } from "./review";
 import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
     rate: z.enum(["1","2","3","4","5"],{required_error:"You need to give a rating"}),
@@ -19,27 +21,45 @@ const formSchema = z.object({
 function ReviewForm({review}:{review:MyReview|null}) {
     const {productId} = useParams()
     const {toast} = useToast()
+    const [loading,setLoading] = useState(false)
     const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema), defaultValues: { rate: review?.rate.toString() as '1', comment: review?.comment } })
     const onSubmit = async(values: z.infer<typeof formSchema>) => {
         try {
-            console.log(values);
+            setLoading(true)
             if(review){
-                const response = await axiosClient.put(`/product/review/${productId}`,{...values,rate:parseInt(values.rate)})
+                await axiosClient.put(`/product/review/${productId}`,{...values,rate:parseInt(values.rate)})
                 toast({description:"review updated"})
             }else{
-                const response = await axiosClient.post(`/product/review/${productId}`,{...values,rate:parseInt(values.rate)})
+                await axiosClient.post(`/product/review/${productId}`,{...values,rate:parseInt(values.rate)})
                 toast({description:"review created"})
             }
+            setLoading(false)
         } catch (error) {
+            setLoading(false)
             if(error instanceof AxiosError){
-
+                const status = error.response?.status
+                if(status===404){
+                    toast({description:"Product not found",variant:"destructive"})
+                }else if(status===401){
+                    toast({description:"You need to login before writing a review",variant:"destructive"})
+                }else if(status===400){
+                    if(error.response?.data.code==="VALIDATION"){
+                        for(const [k,v] of Object.entries(error.response.data.details)){
+                            form.setError(k as "rate"|"comment",{message:v as string})
+                        }
+                    }else if(error.response?.data.code==="UNIQUE_CONSTRAINT"){
+                        toast({description:"You have already created a review for this product",variant:"destructive"})
+                    }else{
+                        toast({description:error.response?.data.message,variant:"destructive"})
+                    }
+                }else{
+                    toast({description:error.response?.data.message,variant:"destructive"})
+                }
             }
-            console.error(error);            
         }
     }
     return (
         <div className="w-full">
-            <h2>Review The product</h2>
             <Form {...form}>
                 <form
                     method="POST"
@@ -110,10 +130,13 @@ function ReviewForm({review}:{review:MyReview|null}) {
                                         </div>
                                     </div>
                                 </FormControl>
+                                <FormMessage/>
                             </FormItem>
                         )}
                     />
-                    <Button type="submit">Add</Button>
+                    <Button type="submit" disabled={loading} className="w-2/4">
+                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/>:review?"Update": "Add"}
+                    </Button>
                 </form>
             </Form>
         </div>

@@ -25,13 +25,13 @@ func AuthMiddleware(ctx *gin.Context){
 		return []byte(os.Getenv("JWT_SECRET")),nil
 	})
 	if err!=nil{
-		ctx.JSON(http.StatusUnauthorized,gin.H{"message":"Please login and try again"})
+		ctx.JSON(http.StatusUnauthorized,gin.H{"message":"Please login and try again","code":helpers.TOKEN_INVALID})
 		ctx.Abort()
 		return
 	}
 	claims,ok:=token.Claims.(jwt.MapClaims)
 	if !ok||!token.Valid{
-		ctx.JSON(http.StatusUnauthorized,gin.H{"message":"Please login and try again"})
+		ctx.JSON(http.StatusUnauthorized,gin.H{"message":"Please login and try again","code":helpers.TOKEN_INVALID})
 		ctx.Abort()
 		return	
 	}
