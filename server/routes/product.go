@@ -18,7 +18,7 @@ func SetupProductRoute(router *gin.RouterGroup){
 	imagesGroup := router.Group("/images")
 	imagesGroup.POST("/:productId",controllers.ProductController.AddImages)
 	imagesGroup.PUT("/:productId/image/:imageId",controllers.ProductController.UpdateImage)
-	imagesGroup.DELETE("/",controllers.ProductController.DeleteImages)
+	imagesGroup.DELETE("/:productId",controllers.ProductController.DeleteImages)
 
 	attributesGroup := router.Group("/attribute")
 	attributesGroup.GET("",controllers.AttributeController.FindAll)

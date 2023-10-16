@@ -23,6 +23,7 @@ type FindQueryParams struct{
 	MainCategory *int `form:"cid" binding:"omitempty,min=0"`
 	SubCategory *int `form:"sid" binding:"omitempty,min=0"`
 	InStock *bool `form:"inStock" binding:"omitempty"`
+	NoImg *bool `form:"noImg" binding:"omitempty"`
 	ValuesIds []int `form:"valuesIds[]" binding:"omitempty"`
 	SubCategories []int `form:"subs[]" binding:"omitempty"`
 }
@@ -37,9 +38,11 @@ func (p *productRepository) Search(keyword string,pagination *helpers.Pagination
 }
 
 func (p *productRepository) Find(params *FindQueryParams,pagination *helpers.PaginationOptions) (products []models.ProductFind,err error){
-	query:= globals.Dialect.Select("pr.id","pr.name","pr.price","pr.sku","pr.stock","img.img_name").From(goqu.T("tbl_product").As("pr")).
-	LeftJoin(goqu.T("tbl_product_image").As("img"),goqu.On(goqu.Ex{"img.product_id":goqu.I("pr.id"),"img.primary_img":true})).
+	query:= globals.Dialect.Select("pr.id","pr.name","pr.price","pr.sku","pr.stock").From(goqu.T("tbl_product").As("pr")).
 	Limit(pagination.Limit).Distinct()
+	if params.NoImg==nil{
+		query= query.SelectAppend("img.img_name").LeftJoin(goqu.T("tbl_product_image").As("img"),goqu.On(goqu.Ex{"img.product_id":goqu.I("pr.id"),"img.primary_img":true}))
+	}
 	conditions := goqu.Ex{"deleted_at":nil}
 	if params.MaxPrice!=nil&&params.MinPrice!=nil{
 		conditions["price"] = goqu.Op{"between":goqu.Range(params.MinPrice,params.MaxPrice)}
@@ -148,11 +151,23 @@ func (p *productRepository) Create(product interface{},attributes []models.Produ
 	return Id,err
 }
 
-func (p *productRepository) AddImages(id string,images ...goqu.Record)error{
+func (p *productRepository) CheckImagesLimit(id string)(count int, err error){
+	err=globals.DB.Get(&count,"SELECT COUNT(product_id) FROM tbl_product_image WHERE product_id=$1",id)
+	return
+}
+
+func (p *productRepository) AddImages(id string,primaryExists bool,images ...goqu.Record)error{
+	if primaryExists{
+		_,err:=globals.DB.Exec("UPDATE tbl_product_image SET primary_img=false WHERE product_id=$1",id)
+		if err!=nil{
+			return err
+		}
+	}
 	sql,_,_:=globals.Dialect.Insert("tbl_product_image").Rows(images).ToSQL()
 	_,err:= globals.DB.Exec(sql)
 	return err
 }
+
 func (p *productRepository) UpdateImage(imgId ,productId string)(int64,error){
 	result,err:= globals.DB.Exec("UPDATE tbl_product_image SET primary_img=CASE WHEN id=$1 THEN true ELSE false END WHERE product_id=$2",imgId,productId)
 	if err!=nil{
@@ -161,15 +176,36 @@ func (p *productRepository) UpdateImage(imgId ,productId string)(int64,error){
 	rows,err:=result.RowsAffected()
 	return rows,err
 }
-func (p *productRepository) DeleteImages(ids []int)([]string,error){
-	query,args,err := sqlx.In("DELETE FROM tbl_product_image WHERE id IN (?) RETURNING img_name",ids)
+
+type deleteImg struct{
+	Name string `db:"img_name"`
+	PrimaryImg bool `db:"primary_img"`
+}
+
+func (p *productRepository) DeleteImages(productId string,ids []int)([]string,error){
+	query,args,err := sqlx.In("DELETE FROM tbl_product_image WHERE id IN (?) and product_id=? RETURNING img_name,primary_img",ids,productId)
 	if err!=nil{
 		return nil,err
 	}
 	query = globals.DB.Rebind(query)
-	names:=make([]string,0,len(ids))
-	err = globals.DB.Select(&names,query,args...)
-	return names,err
+	rows,err:=globals.DB.Queryx(query,args...)
+	if err!=nil{
+		return nil,err
+	}
+	defer rows.Close()
+	imagesNames:=make([]string,0,len(ids))
+	for rows.Next(){
+		img:=deleteImg{};
+		err=rows.Scan(&img.Name,&img.PrimaryImg)
+		if err!=nil{
+			return nil,err
+		}
+		if img.PrimaryImg{
+			_,err = globals.DB.Exec("UPDATE tbl_product_image SET primary_img = true WHERE product_id=$1 LIMIT 1",productId)
+		}
+		imagesNames = append(imagesNames, img.Name)
+	}
+	return imagesNames,err
 }
 
 func (p *productRepository) Update(id string,data interface{}) (int64,error){

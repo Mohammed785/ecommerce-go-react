@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -31,11 +32,11 @@ type product struct{
 
 type productCreate struct{
 	Name string `json:"name" form:"name" binding:"required,max=255"`
-	Sku string `json:"sku" form:"sku" binding:"required,min=16,max=16"`
+	Sku string `json:"sku" form:"sku" binding:"required,min=12,max=12"`
 	Description *string `json:"description" form:"description" binding:"omitempty"`
 	Price float64 `json:"price" form:"price" binding:"required,min=0"`
 	Stock int `json:"stock" form:"stock" binding:"required,min=0"`
-	CategoryId int `json:"category_id" form:"category_id" binding:"required,min=1" db:"category_id"`
+	CategoryId int `json:"categoryId" form:"categoryId" binding:"required,min=1" db:"category_id"`
 }
 
 type productImage struct{
@@ -45,10 +46,11 @@ type productImage struct{
 
 type productUpdate struct{
 	Name *string `json:"name" binding:"omitempty,max=255"`
-	Sku *string `json:"sku" binding:"omitempty,min=16,max=16"`
+	Sku *string `json:"sku" binding:"omitempty,min=12,max=12"`
 	Description *string `json:"description" binding:"omitempty"`
-	Price *int `json:"price" binding:"omitempty,min=0"`
+	Price *float64 `json:"price" binding:"omitempty,min=0"`
 	Stock *int `json:"stock" binding:"omitempty,min=0"`
+	CategoryId *int `json:"categoryId" form:"categoryId" db:"category_id" binding:"omitempty,min=1"`
 }
 
 type productAttribute struct{
@@ -144,6 +146,20 @@ func (p *productController) AddImages(ctx *gin.Context){
 		return
 	}
 	productId := ctx.Param("productId")
+	count,err:=repository.ProductRepository.CheckImagesLimit(productId)
+	if err!=nil{
+		helpers.HandleDatabaseErrors(ctx,err,"product images")
+		return
+	}
+	// maximum images for one product is 4
+	if count==4{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest,gin.H{"message":"You have already reached the maximum image count for this product"})
+		return
+	}
+	if count+len(data.Image)>4{
+		ctx.AbortWithStatusJSON(http.StatusBadRequest,gin.H{"message":fmt.Sprintf("You can only upload %d more image(s)", 4-count)})
+		return
+	}
 	images := make([]goqu.Record,0,len(data.Image))
 	primaryImg:=false
 	for i := 0; i < len(data.Image); i++ {
@@ -162,7 +178,7 @@ func (p *productController) AddImages(ctx *gin.Context){
 	if !primaryImg{
 		images[0]["primary_img"] = true
 	}
-	err:=repository.ProductRepository.AddImages(productId,images...)
+	err=repository.ProductRepository.AddImages(productId,primaryImg,images...)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"product images"){
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
@@ -197,7 +213,8 @@ func (p *productController) DeleteImages(ctx *gin.Context){
 		helpers.SendValidationError(ctx,err);
 		return
 	}
-	images_names,err:= repository.ProductRepository.DeleteImages(data.Ids)
+	productId := ctx.Param("productId")
+	images_names,err:= repository.ProductRepository.DeleteImages(productId,data.Ids)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"product images"){
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
@@ -212,7 +229,7 @@ func (p *productController) DeleteImages(ctx *gin.Context){
 			return
 		}
 	}
-	ctx.Status(http.StatusOK)
+	ctx.Status(http.StatusNoContent)
 }
 
 func (p *productController) Update(ctx *gin.Context){
@@ -237,6 +254,7 @@ func (p *productController) Update(ctx *gin.Context){
 func (p *productController) Delete(ctx *gin.Context){
 	id:=ctx.Param("id")
 	_,hard:=ctx.GetQuery("hard")
+	// delete images if hard
 	rows,err:=repository.ProductRepository.Delete(id,hard)
 	if err!=nil{
 		ctx.JSON(http.StatusNotFound,gin.H{"message":err.Error()})

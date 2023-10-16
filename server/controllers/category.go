@@ -33,6 +33,9 @@ func extractSubs(categories []models.Category){
 		for _,match := range matches{
 			items := strings.Split(match[1], ",")
 			id,_ := strconv.Atoi(items[0])
+			if id==0{
+				continue;
+			}
 			item := struct {Id int `json:"id"`;Name string `json:"name"`}{Id:id,Name:strings.Trim(items[1],`\"`)};
 			categories[i].Subs = append(categories[i].Subs,item)
 		}
