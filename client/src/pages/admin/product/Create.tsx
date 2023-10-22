@@ -29,7 +29,9 @@ const formSchema = z.object({
         stock:z.coerce.number().min(1,{message:"Minimum stock allowed is 1"}),
         categoryId:z.number({required_error:"Please choose a category for the product"})
     }),
-    attributes: z.array(z.object({ attributeId: z.number(), valueId: z.number() })).min(1, "Product should have at least one attribute").refine(items => new Set(items.map(i=>i.attributeId)).size === items.length, {
+    attributes: z.array(z.object({ attributeId: z.number(), valueId: z.number() }))
+    .min(1, "Product should have at least one attribute")
+    .refine(items => new Set(items.map(i=>i.attributeId)).size === items.length, {
         message: "You can't add duplicate attributes",
     })
 }) 
@@ -99,7 +101,6 @@ function ProductCreate(){
         loadCategories()
     },[])
     const onSubmit = async(values:z.infer<typeof formSchema>)=>{
-        values.product.categoryId = values.product.categoryId
         if(!images.imagesFiles||images.imagesFiles.length!==4){
             return toast({description:"Please upload 4 product images",variant:"destructive"})
         }

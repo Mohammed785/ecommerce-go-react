@@ -9,7 +9,7 @@ function ProductImages({images}:{images:ProductImage[]}){
             <div className="lg:order-2 lg:ml-5">
                 <div className="max-w-full overflow-hidden rounded-lg">
                     {
-                        <img className="h-full w-full max-w-full object-cover" src={`http://localhost:8000/static/${selected?.name}`} alt="main-thumbnail" />
+                        <img className="h-full w-full max-w-full object-cover aspect-square" src={`http://localhost:8000/static/${selected?.name}`} alt="main-thumbnail" />
                     }
                 </div>
             </div>
@@ -18,9 +18,11 @@ function ProductImages({images}:{images:ProductImage[]}){
                 <div className="flex flex-row items-start lg:flex-col">
                     {
                         images.map(img=>(
-                            <button key={img.id} type="button" onClick={()=>{setSelected(img)}} className={cn("flex-0 aspect-square mb-3 overflow-hidden rounded-lg border-2 text-center", img.id === selected?.id ? "border-foreground" : "border-transparent") }>
-                                <img className="h-full w-full object-cover" src={`http://localhost:8000/static/${img.name}`} alt="thumbnail" />
-                            </button>
+                            <div className="flex flex-1 mb-3 cursor-pointer relative">
+                                <button key={img.id} type="button" onClick={()=>{setSelected(img)}} className={cn("flex-0 aspect-square mb-3 overflow-hidden rounded-lg border-2 text-center", img.id === selected?.id ? "border-foreground" : "border-transparent") }>
+                                    <img className="h-full w-full object-cover" src={`http://localhost:8000/static/${img.name}`} alt="thumbnail" />
+                                </button>
+                            </div>
                         ))
                     }
                 </div>
