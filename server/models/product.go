@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/lib/pq"
+)
 
 type ProductDetails struct{
 	Product Product
@@ -35,6 +39,15 @@ type Category struct{
 type Attribute struct{
 	Id int `db:"id" json:"id"`
 	Name string `db:"name" json:"name" binding:"required,max=255"`
+	Cat pq.StringArray `db:"categories" json:"-"`
+	Categories []Category `db:"-" json:"categories"`
+	ValuesString pq.StringArray `db:"values" json:"-"`
+	Values []AttributeValue `db:"-" json:"values"`
+}
+
+type AttributeValue struct{
+	Id int `json:"id"`
+	Value string `json:"value"`
 }
 
 type ProductAttributes struct{

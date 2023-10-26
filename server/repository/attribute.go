@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/Mohammed785/ecommerce/globals"
 	"github.com/Mohammed785/ecommerce/helpers"
 	"github.com/Mohammed785/ecommerce/models"
@@ -11,8 +14,42 @@ import (
 type attributeRepository struct {}
 var AttributeRepository *attributeRepository = &attributeRepository{}
 
-func (a *attributeRepository) FindAll()(attributes []models.Attribute,err error){
-	err=globals.DB.Select(&attributes,"SELECT * FROM tbl_attribute")
+func (a *attributeRepository) FindAll(withCategories ,withValues bool)(attributes []models.Attribute,err error){
+	query:=goqu.From(goqu.T("tbl_attribute").As("attr")).Select("attr.id","attr.name")
+	if withCategories{
+		categoryQuery := goqu.From(goqu.T("tbl_category_attribute").As("ca")).
+		Select("attribute_id",goqu.L("ARRAY_REMOVE(ARRAY_AGG((cat.id,cat.name)),NULL)").As("categories")).LeftJoin(goqu.T("tbl_category").As("cat"),
+		goqu.On(goqu.I("ca.category_id").Eq(goqu.I("cat.id")))).Where(goqu.C("attribute_id").Eq(goqu.I("attr.id"))).GroupBy("attribute_id").As("categories")
+		query = query.LeftJoin(
+			goqu.Lateral(categoryQuery),goqu.On(goqu.V(true)),
+		).SelectAppend("categories.categories")
+	}
+	if withValues{
+		valuesQuery := goqu.From(goqu.T("tbl_attribute_value")).
+		Select("attribute_id",goqu.L("ARRAY_REMOVE(ARRAY_AGG((id,value)),NULL)").As("values")).
+		Where(goqu.C("attribute_id").Eq(goqu.I("attr.id"))).GroupBy("attribute_id").As("val")
+		query = query.LeftJoin(
+			goqu.Lateral(valuesQuery),goqu.On(goqu.V(true)),
+		).SelectAppend("val.values")
+
+	}
+	sql,_,_:=query.ToSQL()
+	err = globals.DB.Select(&attributes,sql)
+	for i:=range attributes{
+		attributes[i].Categories = make([]models.Category, 0,len(attributes[i].Cat))
+		attributes[i].Values = make([]models.AttributeValue, 0,len(attributes[i].Cat))
+		for _,category := range attributes[i].Cat{
+			info := strings.Split(strings.Trim(category,"()"),",")
+			id,_:=strconv.Atoi(info[0])
+			attributes[i].Categories = append(attributes[i].Categories, models.Category{Id: id,Name:info[1]})
+		}
+		for _,value := range attributes[i].ValuesString{
+			info := strings.Split(strings.Trim(value,"()"),",")
+			id,_:=strconv.Atoi(info[0])
+			attributes[i].Values = append(attributes[i].Values, models.AttributeValue{Id: id,Value: info[1]})
+		}
+	}
+
 	return attributes,err
 }
 
@@ -63,12 +100,12 @@ func (a *attributeRepository) Create(name,attributeType string) error {
 type AttributeCreate struct{
 	Name string `json:"name" binding:"required,max=255"`
 	Values []string `json:"values" db:"-" binding:"required,min=1,unique"`
-	CategoriesIds []int `json:"categories_ids" db:"-" binding:"omitempty,min=1,unique"`
+	CategoriesIds []int `json:"categoriesIds" db:"-" binding:"omitempty,min=1,unique"`
 }
 
 type CategoryAttribute struct{
-	AttributeId int `json:"attribute_id" db:"attribute_id" binding:"required,min=1"`
-	CategoryId int `json:"category_id" db:"category_id" binding:"required,min=1"`	
+	AttributeId int `json:"attributeId" db:"attribute_id" binding:"required,min=1"`
+	CategoryId int `json:"categoryId" db:"category_id" binding:"required,min=1"`	
 }
 
 func (a *attributeRepository) CreateBulk(attributes ...AttributeCreate) ([]int,error){

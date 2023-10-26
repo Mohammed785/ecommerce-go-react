@@ -23,7 +23,9 @@ type attributeController struct{}
 var AttributeController *attributeController = &attributeController{}
 
 func (a *attributeController) FindAll(ctx *gin.Context){
-	attributes,err:=repository.AttributeRepository.FindAll();
+	_,withCategory := ctx.GetQuery("category")
+	_,withValues := ctx.GetQuery("values")
+	attributes,err:=repository.AttributeRepository.FindAll(withCategory,withValues);
 	if err!=nil{
 		ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
 		return
