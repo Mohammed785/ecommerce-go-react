@@ -176,14 +176,70 @@ func (a *attributeRepository) AddToCategory(attributeId int,categories []int) er
 	return err
 }
 
-func (a *attributeRepository) Update(id string,values interface{})(int64,error){
-	sql,_,_ := globals.Dialect.Update("tbl_attribute").Where(goqu.C("id").Eq(id)).Set(helpers.FlattenStruct(values)).ToSQL()
-	result,err:= globals.DB.Exec(sql)
-	if err!=nil{
-		return 0,err
+type AttributeUpdate struct{
+	Name *string `json:"name" binding:"omitempty,max=255"`
+	Values struct{
+		ToDelete []int `json:"toDelete" binding:"omitempty"`
+		ToAdd []string `json:"toAdd" binding:"omitempty"`
+		} `json:"values" binding:"omitempty,dive" db:"-"`
+	Categories struct{
+		ToDelete []int `json:"toDelete" binding:"omitempty"`
+		ToAdd []int `json:"toAdd" binding:"omitempty"`	
+	} `json:"categories" binding:"omitempty,dive" db:"-"`
+}
+
+func (a *attributeRepository) Update(id string,newData *AttributeUpdate)(inserted int64,err error){
+	if newData.Values.ToDelete!=nil{
+		query,args,err := sqlx.In("DELETE FROM tbl_attribute_value WHERE id IN (?)",newData.Values.ToDelete);
+		if err!=nil{
+			return 0,err
+		}
+		query = globals.DB.Rebind(query)
+		_,err=globals.DB.Exec(query,args...);
+		if err!=nil{
+			return 0,err
+		}
 	}
-	inserted,err := result.RowsAffected()
-	return inserted,err
+	if newData.Values.ToAdd!=nil{
+		rows:= helpers.Map[string,struct{Value string `db:"value"`;AttributeId string `db:"attribute_id"`}](newData.Values.ToAdd,func(s string) struct{Value string "db:\"value\""; AttributeId string "db:\"attribute_id\""} {
+			return struct{Value string "db:\"value\""; AttributeId string "db:\"attribute_id\""}{Value: s,AttributeId: id}
+		})
+		query,_,_ := globals.Dialect.Insert("tbl_attribute_value").Rows(rows).ToSQL();
+		_,err=globals.DB.Exec(query);
+		if err!=nil{
+			return 0,err
+		}
+	}
+	if newData.Categories.ToDelete!=nil{
+		query,args,err := sqlx.In("DELETE FROM tbl_category_attribute WHERE category_id IN (?) AND attribute_id=?",newData.Categories.ToDelete,id);
+		if err!=nil{
+			return 0,err
+		}
+		query = globals.DB.Rebind(query)
+		_,err=globals.DB.Exec(query,args...);
+		if err!=nil{
+			return 0,err
+		}
+	}
+	if newData.Categories.ToAdd!=nil{
+		rows:= helpers.Map[int,struct{CategoryId int `db:"category_id"`;AttributeId string `db:"attribute_id"`}](newData.Categories.ToAdd,func(s int) struct{CategoryId int "db:\"category_id\""; AttributeId string "db:\"attribute_id\""} {
+			return struct{CategoryId int "db:\"category_id\""; AttributeId string "db:\"attribute_id\""}{CategoryId: s,AttributeId: id}
+		})
+		query,_,_ := globals.Dialect.Insert("tbl_category_attribute").Rows(rows).ToSQL();
+		_,err=globals.DB.Exec(query);
+		if err!=nil{
+			return 0,err
+		}
+	}
+	if newData.Name!=nil{
+		result,err:= globals.DB.Exec("UPDATE tbl_attribute SET name=$1 WHERE id=$2",newData.Name,id)
+		if err!=nil{
+			return 0,err
+		}
+		inserted,err = result.RowsAffected()
+	}
+	return
+	// sql,_,_ := globals.Dialect.Update("tbl_attribute").Where(goqu.C("id").Eq(id)).Set(helpers.FlattenStruct(newData)).ToSQL()
 }
 
 func (a *attributeRepository) Delete(id string)(int64,error){

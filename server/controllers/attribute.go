@@ -10,9 +10,7 @@ import (
 )
 
 
-type attributeUpdate struct{
-	Name *string `json:"name" binding:"omitempty,max=255"`
-}
+
 
 type attributesCreate struct{
 	Attributes []repository.AttributeCreate `json:"attributes" binding:"required,min=1,unique=Name,dive"`
@@ -111,13 +109,13 @@ func (a *attributeController) AddToCategory(ctx *gin.Context){
 }
 
 func (a *attributeController) Update(ctx *gin.Context){
-	var data attributeUpdate
+	var data repository.AttributeUpdate
 	if err:=ctx.ShouldBindJSON(&data);err!=nil{
 		helpers.SendValidationError(ctx,err)
 		return
 	}
 	id:=ctx.Param("id")
-	rows,err:=repository.AttributeRepository.Update(id,data)
+	rows,err:=repository.AttributeRepository.Update(id,&data)
 	if err!=nil{
 		if !helpers.HandleDatabaseErrors(ctx,err,"attribute"){
 			ctx.JSON(http.StatusInternalServerError,gin.H{"message":err.Error()})
