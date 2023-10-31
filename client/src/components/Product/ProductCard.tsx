@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import imgUrl from "../../assets/temp.png"
 import { Button } from "@/components/ui/button";
 import { MouseEvent } from "react";
 import { ProductSearch } from "@/context/ProductsContext";
@@ -10,8 +9,9 @@ function ProductCard({product}:{product:ProductSearch}){
         // TODO:
     }
     return <div className="w-72 lg:w-64 shadow-md rounded-xl duration-500 dark:shadow-neutral-900 hover:shadow-xl">
-            <Link to={`/product/${product.id}`}>
-            <img className="h-60 w-72 lg:w-64 object-cover rounded-t-xl transition duration-300 ease-in-out hover:scale-105" src={imgUrl} alt=""/>                <div className="px-4 py-3 min-h-fit w-72 lg:w-64 bg-accent rounded-b-xl">
+            <Link className="h-full" to={`/product/${product.id}`}> 
+            <img className="h-60 w-72 lg:w-64 object-cover rounded-t-xl transition duration-300 ease-in-out hover:scale-105" src={`http://localhost:8000/static/${product.image}`} alt=""/>                
+            <div className="px-4 py-3 min-h-fit w-72 lg:w-64 bg-accent rounded-b-xl">
                     {/* <span className="text-gray-400 mr-3 uppercase text-xs">Brand</span> */}
                     <p className="text-lg font-bold text-foreground block capitalize">{product.name}</p>
                     <div className="flex items-center">

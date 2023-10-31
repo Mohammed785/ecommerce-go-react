@@ -80,7 +80,6 @@ const columns:ColumnDef<CategoryColumnType>[] = [
 
                                                 }
                                                 console.error(error);
-                                                
                                             }
                                         }
                                     }}>Delete</AlertDialogAction>
@@ -94,11 +93,9 @@ const columns:ColumnDef<CategoryColumnType>[] = [
                                 </DropdownMenuItem>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
-                            <CategoryForm category={{ id: row.getValue("id"), name: row.getValue("name"), parentId: parent?.id}} handleUpdate={(categoryId,values)=>{
-                                    table.options.meta?.updateRow(categoryId,values)
-                                }}/>
+                            <CategoryForm category={{ id: row.getValue("id"), name: row.getValue("name"), parentId: parent?.id}}/>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="w-full">Cancel</AlertDialogCancel>
                             </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
@@ -126,14 +123,10 @@ function CategoriesPage(){
             row.id!==categoryId
         )))
     }
-    const updateRow = (categoryId: number, values: CategoryColumnType)=>{
-        const parent = values.parent?.id?data.find((cat)=>cat.id===values.parent?.id):undefined
-        setData([...data.filter(row=>row.id!==categoryId),{...values,id:categoryId,parent}])
-    }
     return <div className="w-full">
         <CategoryForm className="md:w-2/4 sm:w-full lg:w-2/4 p-2 m-auto" />
         <div className="rounded-md border mt-4 w-2/3 m-auto">
-            <DataTable columns={columns} data={data} meta={{ removeRow, updateRow }} initialState={{ columnVisibility: { parentId: false }}}/>
+            <DataTable columns={columns} data={data} meta={{ removeRow }} initialState={{ columnVisibility: { parentId: false }}}/>
         </div>
     </div>
 }
