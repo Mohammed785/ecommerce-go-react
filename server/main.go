@@ -34,8 +34,8 @@ func main(){
 	server.Static("/static","./uploads")
 	authRouter := server.Group("/api/v1/auth");
 	userRouter := server.Group("/api/v1/user",middleware.AuthMiddleware);
-	categoryRouter := server.Group("/api/v1/category",middleware.AuthMiddleware);
-	productRouter := server.Group("/api/v1/product",middleware.AuthMiddleware);
+	categoryRouter := server.Group("/api/v1/category");
+	productRouter := server.Group("/api/v1/product");
 	routes.SetupAuthRoute(authRouter)
 	routes.SetupUserRoute(userRouter)
 	routes.SetupCategoryRoute(categoryRouter)

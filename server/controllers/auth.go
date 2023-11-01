@@ -63,7 +63,7 @@ func (a *AuthControllerStruct) Login(ctx *gin.Context){
 		return
 	}
 	ctx.SetCookie("token",token,int(time.Duration(12*time.Hour).Seconds()),"/","",os.Getenv("GIN_MODE")=="release",true)
-	ctx.JSON(http.StatusOK,gin.H{"token":token})
+	ctx.JSON(http.StatusOK,gin.H{"token":token,"user":gin.H{"id":user.ID,"isAdmin":user.IsAdmin}})
 }
 
 func (a *AuthControllerStruct) Register(ctx *gin.Context){
