@@ -99,8 +99,8 @@ func (a *AuthControllerStruct) ChangePassword(ctx *gin.Context){
 		helpers.SendValidationError(ctx,err)
 		return
 	}
-	userId:=ctx.GetInt("uid");
-	user,err:= repository.UserRepository.FindById(userId,&selectArg{})
+	userId:=ctx.GetFloat64("uid");
+	user,err:= repository.UserRepository.FindById(int(userId),&selectArg{})
 	if err!=nil && errors.Is(err,sql.ErrNoRows){
 		ctx.JSON(http.StatusNotFound,gin.H{"message":"Please login and try again"})
 		return

@@ -2,26 +2,29 @@ import { axiosClient } from "@/axiosClient"
 import { useToast } from "@/components/ui/use-toast"
 import { ReactNode, createContext, useEffect, useState } from "react"
 
+export type CategoryType = {
+    id: number,
+    name: string,
+    parentId: number | null,
+}
+
 export type SubCategoryType = {
     id: number,
     name: string,
 }
 
-export type CategoryType = {
-    id: number,
-    name: string,
-    parentId: number|null,
+export type CategoryWithSubsType = CategoryType&{
     subs:SubCategoryType[]|null
 }
 
 type CategoryContextType = {
-    categories:CategoryType[]
+    categories:CategoryWithSubsType[],
 }
 
 export const CategoryContext = createContext<CategoryContextType>({categories:[]})
 
 export function CategoryProvider({children}:{children:ReactNode}){
-    const [categories,setCategories] = useState<CategoryType[]>([])
+    const [categories,setCategories] = useState<CategoryWithSubsType[]>([])
     const { toast } = useToast()
     const loadCategories = async()=>{
         try {

@@ -13,7 +13,7 @@ import { ChangeEvent, useEffect, useRef,useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import * as z from "zod"
-import { CategoryType } from "@/context/CategoryContext"
+import { CategoryWithSubsType } from "@/context/CategoryContext"
 import { cn } from "@/lib/utils";
 import { ProductAttribute, ProductCategory } from "@/context/ProductsContext";
 
@@ -59,7 +59,7 @@ type AttributeWithValue = {
 type Attribute = { attributeId: number, valueId: number }
 
 type State = {
-    categories: CategoryType[]
+    categories: CategoryWithSubsType[]
     attributes: AttributeWithValue[]
     toAddAttributes: Attribute[]
     toDeleteAttributes:number[]

@@ -8,7 +8,7 @@ import { SelectContent } from "@/components/ui/select"
 import { Select } from "@/components/ui/select"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { CategoryType } from "@/context/CategoryContext"
+import { CategoryWithSubsType } from "@/context/CategoryContext"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AxiosError } from "axios"
 import { ChangeEvent, useEffect, useRef, useState } from "react"
@@ -53,7 +53,7 @@ type AttributeWithValue = {
 }
 
 type State = {
-    categories:CategoryType[],
+    categories:CategoryWithSubsType[],
     attributes:AttributeWithValue[],
     currentAttrVal:{attributeId?:number,valueId?:number}
     loading:boolean
