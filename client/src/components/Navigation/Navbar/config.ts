@@ -8,34 +8,25 @@ export const mainNav = [
         to: "/products",
         title: "Products",
     },
-    {
-        to: "/dashboard",
-        title: "Dashboard",
-        admin: true,
-    },
 ];
 
-export const sideNav = [
+export const adminMenu = [
     {
-        title:"Dashboard",
-        admin:true,
-        sub: [
+        title: "Products",
+        to: "/dashboard/products",
+        subs: [
             {
-                to: "/dashboard/products",
-                title: "List Products",
+                to: "/dashboard/product/new",
+                title: "Add Product",
             },
             {
-                to: "/dashboard/products/new",
-                title: "New Product",
+                to: "/dashboard/attributes",
+                title: "Products Attributes",
             },
             {
-                to:"/dashboard/orders",
-                title:"List Orders"
+                to: "/dashboard/categories",
+                title: "Products Categories",
             },
-            {
-                to:"/dashboard/financial",
-                title:"Financial"
-            }
         ],
-    }
-]
+    },
+];

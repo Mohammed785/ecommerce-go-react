@@ -38,13 +38,13 @@ function LoginForm(){
         } catch (error) {
             if(error instanceof axios.AxiosError){
                 if (error.response?.data.code ==="WRONG_CREDENTIALS"){
-                    toast({title:"Wrong Credentials",description:"Check your email and password and try again"})
+                    toast({ title: "Wrong Credentials", description: "Check your email and password and try again", variant: "destructive" })
                 }else if (error.response?.data.code === "VALIDATION"){
                     for(const [k,v] of Object.entries(error.response.data.details)){
                         form.setError(k as "email"|"password",{message:v as string})
                     }
                 }else{
-                    toast({title:"Server Error",description:"Something went wrong could you try again"})
+                    toast({title:"Server Error",description:"Something went wrong could you try again",variant:"destructive"})
                 }
             }
             setLoading(false)

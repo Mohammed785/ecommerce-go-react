@@ -15,9 +15,6 @@ function MainNav({className,...props}:React.HTMLAttributes<HTMLElement>){
         <nav className={cn("flex items-center space-x-4 lg:space-x-6",className)} {...props}>
             {
                 mainNav.map((link,i)=>{
-                    if(link.admin&&!user?.isAdmin){
-                        return ""
-                    }
                     return <NavLink key={i} to={link.to} end={link.end} className={({isActive})=>{
                         return isActive?baseClass:cn(baseClass,"text-muted-foreground")
                     }}>
@@ -39,7 +36,8 @@ function MainNav({className,...props}:React.HTMLAttributes<HTMLElement>){
                             </ul>
                         </NavigationMenuContent>
                     </NavigationMenuItem>
-                    <NavigationMenuItem>
+                    {
+                        user?.isAdmin&&<NavigationMenuItem>
                         <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
                         <NavigationMenuContent>
                                 <ul className="grid w-[400px] gap-3 p-4 md:[500px] md:grid-cols-2 lg:w-[600px]">
@@ -71,6 +69,7 @@ function MainNav({className,...props}:React.HTMLAttributes<HTMLElement>){
                                 </ul>
                         </NavigationMenuContent>
                     </NavigationMenuItem>
+                    }
                 </NavigationMenuList>
             </NavigationMenu>
         </nav>

@@ -7,9 +7,9 @@ export const axiosClient = axios.create({
 })
 
 axiosClient.interceptors.response.use((response)=>response,async(err)=>{
-    if(err.response?.status===401){
-        window.location.href = "/login"
-        return
+    if (err.response?.status === 401 && err.response.code === "TOKEN_INVALID") {
+        window.location.href = "/login";
+        return;
     }
     return Promise.reject(err)
 })

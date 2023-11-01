@@ -39,6 +39,7 @@ function SearchBar(){
         }
     }
     useEffect(()=>{
+        if(!searchState.q)return
         if (searchState.q.length < 2) {
             toast({ description: `Please enter at least ${2 - searchState.q.length} more letters.` })
             return
